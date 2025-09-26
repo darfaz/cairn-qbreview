@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,8 +93,9 @@ serve(async (req) => {
     
   } catch (error) {
     console.error('Health check error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: 'Health check failed', details: error.message }),
+      JSON.stringify({ error: 'Health check failed', details: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -187,13 +188,14 @@ async function checkConnectionHealth(supabase: any, connection: any): Promise<He
   } catch (error) {
     console.error(`Health check error for client ${client_id}:`, error);
     
-    await logHealthEvent(supabase, client_id, 'health_check_error', error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    await logHealthEvent(supabase, client_id, 'health_check_error', errorMessage);
     
     return {
       clientId: client_id,
       realmId: realm_id,
       status: 'error',
-      error: error.message
+      error: errorMessage
     };
   }
 }

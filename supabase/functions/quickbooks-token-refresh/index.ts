@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,8 +57,9 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Token refresh error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -170,6 +171,8 @@ async function refreshConnection(supabase: any, connectionId: string) {
   } catch (error) {
     console.error(`Token refresh failed for connection ${connectionId}:`, error);
     
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
     // Log the error
     const { data: connection } = await supabase
       .from('qbo_connections')
@@ -178,10 +181,10 @@ async function refreshConnection(supabase: any, connectionId: string) {
       .single();
     
     if (connection) {
-      await logTokenEvent(supabase, connection.client_id, 'token_refresh_failed', error.message);
+      await logTokenEvent(supabase, connection.client_id, 'token_refresh_failed', errorMessage);
       
       // If invalid_grant error, mark as disconnected
-      if (error.message.includes('invalid_grant')) {
+      if (errorMessage.includes('invalid_grant')) {
         await supabase
           .from('qbo_connections')
           .update({ 
@@ -194,7 +197,7 @@ async function refreshConnection(supabase: any, connectionId: string) {
 
     return {
       success: false,
-      error: error.message
+      error: errorMessage
     };
   }
 }
