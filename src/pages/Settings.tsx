@@ -63,7 +63,7 @@ const Settings = () => {
 
   const fetchOAuthSettings = async () => {
     try {
-      // Get the user's current info
+      // Get the user's current info and OAuth settings from their profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setOauthSettings({
@@ -75,33 +75,15 @@ const Settings = () => {
         return;
       }
 
-      // Get the user's profile
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.firm_id) {
-        // Set default settings if no firm yet - firm will be created on save
-        setOauthSettings({
-          intuit_client_id: null,
-          intuit_client_secret: null,
-          qboa_oauth_enabled: false,
-          oauth_redirect_uri: `${window.location.origin}/api/quickbooks/callback`,
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('firms')
         .select('intuit_client_id, intuit_client_secret, qboa_oauth_enabled, oauth_redirect_uri')
-        .eq('id', profile.firm_id)
+        .eq('id', user.id)
         .single();
 
       if (error) {
         console.error('Error fetching OAuth settings:', error);
-        // Set default settings even if error
+        // Set default settings on error
         setOauthSettings({
           intuit_client_id: null,
           intuit_client_secret: null,
@@ -111,11 +93,11 @@ const Settings = () => {
         return;
       }
 
-      setOauthSettings(data || {
-        intuit_client_id: null,
-        intuit_client_secret: null,
-        qboa_oauth_enabled: false,
-        oauth_redirect_uri: `${window.location.origin}/api/quickbooks/callback`,
+      setOauthSettings({
+        intuit_client_id: profile.intuit_client_id,
+        intuit_client_secret: profile.intuit_client_secret,
+        qboa_oauth_enabled: profile.qboa_oauth_enabled || false,
+        oauth_redirect_uri: profile.oauth_redirect_uri || `${window.location.origin}/api/quickbooks/callback`,
       });
     } catch (error) {
       console.error('Error fetching OAuth settings:', error);
@@ -167,65 +149,20 @@ const Settings = () => {
 
     setSavingOauth(true);
     try {
-      // Get the user's current info
+      // Get the authenticated user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Get the user's profile
-      let { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id, email, first_name, last_name')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile) {
-        throw new Error('No profile found for user');
-      }
-
-      // If user doesn't have a firm, create one
-      let firmId = profile.firm_id;
-      if (!firmId) {
-        const firmName = profile.email ? 
-          `${profile.email.split('@')[0]}'s Firm` : 
-          `${profile.first_name || 'User'}'s Firm`;
-
-        const { data: newFirm, error: firmError } = await supabase
-          .from('firms')
-          .insert({
-            name: firmName,
-            email: profile.email
-          })
-          .select()
-          .single();
-
-        if (firmError) throw firmError;
-
-        firmId = newFirm.id;
-
-        // Associate user with the new firm
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ firm_id: firmId })
-          .eq('id', user.id);
-
-        if (updateError) throw updateError;
-
-        toast({
-          title: 'Firm Created',
-          description: `Created new firm: ${firmName}`,
-        });
-      }
-
-      // Now save the OAuth settings
+      // Save OAuth settings directly to the user's profile
       const { error } = await supabase
-        .from('firms')
+        .from('profiles')
         .update({
           intuit_client_id: oauthSettings.intuit_client_id,
           intuit_client_secret: oauthSettings.intuit_client_secret,
           qboa_oauth_enabled: oauthSettings.qboa_oauth_enabled,
           oauth_redirect_uri: oauthSettings.oauth_redirect_uri,
         })
-        .eq('id', firmId);
+        .eq('id', user.id);
 
       if (error) {
         throw error;

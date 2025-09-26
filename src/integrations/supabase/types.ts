@@ -82,13 +82,9 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
-          intuit_client_id: string | null
-          intuit_client_secret: string | null
           logo_url: string | null
           name: string
-          oauth_redirect_uri: string | null
           phone: string | null
-          qboa_oauth_enabled: boolean
           updated_at: string
           website: string | null
         }
@@ -97,13 +93,9 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
-          intuit_client_id?: string | null
-          intuit_client_secret?: string | null
           logo_url?: string | null
           name: string
-          oauth_redirect_uri?: string | null
           phone?: string | null
-          qboa_oauth_enabled?: boolean
           updated_at?: string
           website?: string | null
         }
@@ -112,13 +104,9 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
-          intuit_client_id?: string | null
-          intuit_client_secret?: string | null
           logo_url?: string | null
           name?: string
-          oauth_redirect_uri?: string | null
           phone?: string | null
-          qboa_oauth_enabled?: boolean
           updated_at?: string
           website?: string | null
         }
@@ -194,7 +182,11 @@ export type Database = {
           firm_id: string | null
           first_name: string | null
           id: string
+          intuit_client_id: string | null
+          intuit_client_secret: string | null
           last_name: string | null
+          oauth_redirect_uri: string | null
+          qboa_oauth_enabled: boolean
           role: string | null
           updated_at: string
         }
@@ -204,7 +196,11 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id: string
+          intuit_client_id?: string | null
+          intuit_client_secret?: string | null
           last_name?: string | null
+          oauth_redirect_uri?: string | null
+          qboa_oauth_enabled?: boolean
           role?: string | null
           updated_at?: string
         }
@@ -214,7 +210,11 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id?: string
+          intuit_client_id?: string | null
+          intuit_client_secret?: string | null
           last_name?: string | null
+          oauth_redirect_uri?: string | null
+          qboa_oauth_enabled?: boolean
           role?: string | null
           updated_at?: string
         }
