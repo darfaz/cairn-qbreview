@@ -1,1 +1,4 @@
 project_id = "xfswfetxfqhgvpwlhfce"
+
+[functions.run-reconciliation]
+verify_jwt = false

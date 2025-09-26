@@ -1,6 +1,7 @@
 import { Search, Settings, UserCircle, Bell } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardHeaderProps {
   searchQuery: string;
@@ -8,6 +9,8 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -39,7 +42,7 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
             <Bell className="w-4 h-4" />
           </Button>
           
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
             <Settings className="w-4 h-4" />
           </Button>
           
