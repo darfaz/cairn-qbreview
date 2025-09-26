@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
+import CompanySelection from "./pages/CompanySelection";
+import CompanyManagement from "./pages/CompanyManagement";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -30,6 +32,16 @@ const App = () => {
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="/company-selection" element={
+                <ProtectedRoute>
+                  <CompanySelection />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings/companies" element={
+                <ProtectedRoute>
+                  <CompanyManagement />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

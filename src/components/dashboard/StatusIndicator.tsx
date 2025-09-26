@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
 interface StatusIndicatorProps {
-  status: 'green' | 'yellow' | 'red';
+  status: 'green' | 'yellow' | 'red' | 'gray';
   count?: number;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -17,12 +17,14 @@ export function StatusIndicator({ status, count, size = 'md' }: StatusIndicatorP
     green: 'bg-status-green',
     yellow: 'bg-status-yellow',
     red: 'bg-status-red',
+    gray: 'bg-gray-400',
   };
 
   const statusText = {
     green: count === 0 ? 'Clean' : `${count} items`,
     yellow: `${count} items`,
     red: `${count} items`,
+    gray: 'Inactive',
   };
 
   return (
