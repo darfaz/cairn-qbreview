@@ -68,7 +68,7 @@ serve(async (req) => {
     const { environment = 'production' }: ConnectRequest = await req.json();
 
     // Generate secure random state parameter for CSRF protection
-    const state = crypto.randomUUID();
+    const state = globalThis.crypto.randomUUID();
     const stateExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Store state in database for validation
