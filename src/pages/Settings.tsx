@@ -70,7 +70,16 @@ const Settings = () => {
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      if (!profile?.firm_id) return;
+      if (!profile?.firm_id) {
+        // Set default empty settings if no firm
+        setOauthSettings({
+          intuit_client_id: null,
+          intuit_client_secret: null,
+          qboa_oauth_enabled: false,
+          oauth_redirect_uri: null,
+        });
+        return;
+      }
 
       const { data, error } = await supabase
         .from('firms')
@@ -80,12 +89,31 @@ const Settings = () => {
 
       if (error) {
         console.error('Error fetching OAuth settings:', error);
+        // Set default settings even if error
+        setOauthSettings({
+          intuit_client_id: null,
+          intuit_client_secret: null,
+          qboa_oauth_enabled: false,
+          oauth_redirect_uri: null,
+        });
         return;
       }
 
-      setOauthSettings(data);
+      setOauthSettings(data || {
+        intuit_client_id: null,
+        intuit_client_secret: null,
+        qboa_oauth_enabled: false,
+        oauth_redirect_uri: null,
+      });
     } catch (error) {
       console.error('Error fetching OAuth settings:', error);
+      // Set default settings on error
+      setOauthSettings({
+        intuit_client_id: null,
+        intuit_client_secret: null,
+        qboa_oauth_enabled: false,
+        oauth_redirect_uri: null,
+      });
     }
   };
 
@@ -332,7 +360,7 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {oauthSettings && (
+              {oauthSettings ? (
                 <>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -421,6 +449,10 @@ const Settings = () => {
                     Save OAuth Settings
                   </Button>
                 </>
+              ) : (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
               )}
             </CardContent>
           </Card>
