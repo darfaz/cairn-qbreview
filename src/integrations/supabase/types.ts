@@ -477,9 +477,17 @@ export type Database = {
       }
     }
     Functions: {
+      encrypt_token: {
+        Args: { _key: string; _token: string }
+        Returns: string
+      }
       hash_token: {
         Args: { _token: string }
         Returns: string
+      }
+      log_token_access: {
+        Args: { _action: string; _client_id: string; _user_id: string }
+        Returns: undefined
       }
       user_can_access_client: {
         Args: { _client_id: string; _user_id: string }
@@ -491,6 +499,14 @@ export type Database = {
       }
       user_can_modify_qbo_tokens: {
         Args: { _connection_client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      validate_token_integrity: {
+        Args: {
+          _encrypted_token: string
+          _key: string
+          _original_token: string
+        }
         Returns: boolean
       }
     }
