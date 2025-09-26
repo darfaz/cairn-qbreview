@@ -63,20 +63,32 @@ const Settings = () => {
 
   const fetchOAuthSettings = async () => {
     try {
-      // Get the user's firm
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!profile?.firm_id) {
-        // Set default empty settings if no firm
+      // Get the user's current info
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         setOauthSettings({
           intuit_client_id: null,
           intuit_client_secret: null,
           qboa_oauth_enabled: false,
           oauth_redirect_uri: null,
+        });
+        return;
+      }
+
+      // Get the user's profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('firm_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.firm_id) {
+        // Set default settings if no firm yet - firm will be created on save
+        setOauthSettings({
+          intuit_client_id: null,
+          intuit_client_secret: null,
+          qboa_oauth_enabled: false,
+          oauth_redirect_uri: `${window.location.origin}/api/quickbooks/callback`,
         });
         return;
       }
@@ -94,7 +106,7 @@ const Settings = () => {
           intuit_client_id: null,
           intuit_client_secret: null,
           qboa_oauth_enabled: false,
-          oauth_redirect_uri: null,
+          oauth_redirect_uri: `${window.location.origin}/api/quickbooks/callback`,
         });
         return;
       }
@@ -103,7 +115,7 @@ const Settings = () => {
         intuit_client_id: null,
         intuit_client_secret: null,
         qboa_oauth_enabled: false,
-        oauth_redirect_uri: null,
+        oauth_redirect_uri: `${window.location.origin}/api/quickbooks/callback`,
       });
     } catch (error) {
       console.error('Error fetching OAuth settings:', error);
@@ -112,7 +124,7 @@ const Settings = () => {
         intuit_client_id: null,
         intuit_client_secret: null,
         qboa_oauth_enabled: false,
-        oauth_redirect_uri: null,
+        oauth_redirect_uri: `${window.location.origin}/api/quickbooks/callback`,
       });
     }
   };
@@ -155,17 +167,56 @@ const Settings = () => {
 
     setSavingOauth(true);
     try {
-      // Get the user's firm
-      const { data: profile } = await supabase
+      // Get the user's current info
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
+      // Get the user's profile
+      let { data: profile } = await supabase
         .from('profiles')
-        .select('firm_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .select('firm_id, email, first_name, last_name')
+        .eq('id', user.id)
         .single();
 
-      if (!profile?.firm_id) {
-        throw new Error('No firm associated with user');
+      if (!profile) {
+        throw new Error('No profile found for user');
       }
 
+      // If user doesn't have a firm, create one
+      let firmId = profile.firm_id;
+      if (!firmId) {
+        const firmName = profile.email ? 
+          `${profile.email.split('@')[0]}'s Firm` : 
+          `${profile.first_name || 'User'}'s Firm`;
+
+        const { data: newFirm, error: firmError } = await supabase
+          .from('firms')
+          .insert({
+            name: firmName,
+            email: profile.email
+          })
+          .select()
+          .single();
+
+        if (firmError) throw firmError;
+
+        firmId = newFirm.id;
+
+        // Associate user with the new firm
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ firm_id: firmId })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+
+        toast({
+          title: 'Firm Created',
+          description: `Created new firm: ${firmName}`,
+        });
+      }
+
+      // Now save the OAuth settings
       const { error } = await supabase
         .from('firms')
         .update({
@@ -174,7 +225,7 @@ const Settings = () => {
           qboa_oauth_enabled: oauthSettings.qboa_oauth_enabled,
           oauth_redirect_uri: oauthSettings.oauth_redirect_uri,
         })
-        .eq('id', profile.firm_id);
+        .eq('id', firmId);
 
       if (error) {
         throw error;
