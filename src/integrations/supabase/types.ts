@@ -179,6 +179,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          firm_id: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -188,6 +189,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          firm_id?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -197,13 +199,22 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          firm_id?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           role?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       qbo_connections: {
         Row: {
@@ -408,7 +419,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_can_access_client: {
+        Args: { _client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_can_access_qbo_connection: {
+        Args: { _connection_client_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
