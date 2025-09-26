@@ -22,7 +22,10 @@ export type Database = {
           dropbox_folder_url: string | null
           firm_id: string | null
           id: string
+          is_active: boolean
+          is_sandbox: boolean
           last_review_date: string | null
+          last_sync_at: string | null
           name: string
           qbo_company_name: string | null
           realm_id: string
@@ -36,7 +39,10 @@ export type Database = {
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
+          is_active?: boolean
+          is_sandbox?: boolean
           last_review_date?: string | null
+          last_sync_at?: string | null
           name: string
           qbo_company_name?: string | null
           realm_id: string
@@ -50,7 +56,10 @@ export type Database = {
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
+          is_active?: boolean
+          is_sandbox?: boolean
           last_review_date?: string | null
+          last_sync_at?: string | null
           name?: string
           qbo_company_name?: string | null
           realm_id?: string
@@ -199,38 +208,50 @@ export type Database = {
       qbo_connections: {
         Row: {
           access_token: string
+          accountant_access: boolean
           client_id: string
+          connection_method: string
           connection_status: string
           created_at: string
           expires_at: string
           id: string
           realm_id: string
           refresh_token: string
+          refresh_token_updated_at: string | null
           scope: string | null
+          token_expires_at: string | null
           updated_at: string
         }
         Insert: {
           access_token: string
+          accountant_access?: boolean
           client_id: string
+          connection_method?: string
           connection_status?: string
           created_at?: string
           expires_at: string
           id?: string
           realm_id: string
           refresh_token: string
+          refresh_token_updated_at?: string | null
           scope?: string | null
+          token_expires_at?: string | null
           updated_at?: string
         }
         Update: {
           access_token?: string
+          accountant_access?: boolean
           client_id?: string
+          connection_method?: string
           connection_status?: string
           created_at?: string
           expires_at?: string
           id?: string
           realm_id?: string
           refresh_token?: string
+          refresh_token_updated_at?: string | null
           scope?: string | null
+          token_expires_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -238,6 +259,59 @@ export type Database = {
             foreignKeyName: "qbo_connections_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_sync_queue: {
+        Row: {
+          client_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          operation_type: string
+          parameters: Json | null
+          priority: number
+          processed_at: string | null
+          retry_count: number
+          scheduled_for: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          operation_type: string
+          parameters?: Json | null
+          priority?: number
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          operation_type?: string
+          parameters?: Json | null
+          priority?: number
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_for?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_sync_queue_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
