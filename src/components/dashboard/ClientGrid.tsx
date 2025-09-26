@@ -3,6 +3,8 @@ import { Client } from '@/types/dashboard';
 import { StatusIndicator } from './StatusIndicator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkReconciliationControls } from './BulkReconciliationControls';
 import {
   Table,
   TableBody,
@@ -32,15 +34,40 @@ interface ClientGridProps {
   onRunReconciliation: (clientId: string) => void;
   onViewHistory: (clientId: string) => void;
   onReconnect: (clientId: string) => void;
+  selectedClientIds?: string[];
+  onSelectionChange?: (clientIds: string[]) => void;
 }
 
 export function ClientGrid({ 
   clients, 
   onRunReconciliation, 
   onViewHistory, 
-  onReconnect 
+  onReconnect,
+  selectedClientIds = [],
+  onSelectionChange = () => {}
 }: ClientGridProps) {
-  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const connectedClientIds = clients
+        .filter(client => client.connectionStatus === 'connected')
+        .map(client => client.id);
+      onSelectionChange(connectedClientIds);
+    } else {
+      onSelectionChange([]);
+    }
+  };
+
+  const handleSelectClient = (clientId: string, checked: boolean) => {
+    if (checked) {
+      onSelectionChange([...selectedClientIds, clientId]);
+    } else {
+      onSelectionChange(selectedClientIds.filter(id => id !== clientId));
+    }
+  };
+
+  const connectedClients = clients.filter(client => client.connectionStatus === 'connected');
+  const allConnectedSelected = connectedClients.length > 0 && 
+    connectedClients.every(client => selectedClientIds.includes(client.id));
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -71,36 +98,58 @@ export function ClientGrid({
   };
 
   return (
-    <div className="dashboard-card">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Client Reconciliations</h2>
-        <p className="text-sm text-muted-foreground">
-          Monitor and manage QuickBooks reconciliation status for all clients
-        </p>
-      </div>
+    <div className="space-y-6">
+      <BulkReconciliationControls
+        selectedClientIds={selectedClientIds}
+        onSelectionChange={onSelectionChange}
+        totalClients={connectedClients.length}
+      />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="table-header">Company Name</TableHead>
-            <TableHead className="table-header">Last Review</TableHead>
-            <TableHead className="table-header">Status</TableHead>
-            <TableHead className="table-header">Connection</TableHead>
-            <TableHead className="table-header">Dropbox</TableHead>
-            <TableHead className="table-header text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {clients.map((client) => (
-            <TableRow key={client.id} className="hover:bg-muted/50">
-              <TableCell>
-                <div>
-                  <div className="font-medium text-foreground">{client.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    ID: {client.realmId}
+      <div className="dashboard-card">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">Client Reconciliations</h2>
+          <p className="text-sm text-muted-foreground">
+            Monitor and manage QuickBooks reconciliation status for all clients
+          </p>
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="table-header w-12">
+                <Checkbox
+                  checked={allConnectedSelected}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all connected clients"
+                />
+              </TableHead>
+              <TableHead className="table-header">Company Name</TableHead>
+              <TableHead className="table-header">Last Review</TableHead>
+              <TableHead className="table-header">Status</TableHead>
+              <TableHead className="table-header">Connection</TableHead>
+              <TableHead className="table-header">Dropbox</TableHead>
+              <TableHead className="table-header text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clients.map((client) => (
+              <TableRow key={client.id} className="hover:bg-muted/50">
+                <TableCell>
+                  <Checkbox
+                    checked={selectedClientIds.includes(client.id)}
+                    onCheckedChange={(checked) => handleSelectClient(client.id, !!checked)}
+                    disabled={client.connectionStatus !== 'connected'}
+                    aria-label={`Select ${client.name}`}
+                  />
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium text-foreground">{client.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      ID: {client.realmId}
+                    </div>
                   </div>
-                </div>
-              </TableCell>
+                </TableCell>
               
               <TableCell>
                 <div className="text-sm font-medium">
@@ -192,5 +241,6 @@ export function ClientGrid({
         </TableBody>
       </Table>
     </div>
+  </div>
   );
 }

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasClients, setHasClients] = useState<boolean | null>(null);
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const { toast } = useToast();
   
   const allClients = useMemo(() => generateMockClients(105), []);
@@ -44,12 +45,28 @@ const Index = () => {
     ).slice(0, 20);
   }, [allClients, searchQuery]);
 
-  const handleRunReconciliation = (clientId: string) => {
+  const handleRunReconciliation = async (clientId: string) => {
     const client = allClients.find(c => c.id === clientId);
-    toast({
-      title: 'Reconciliation Started',
-      description: `Running reconciliation for ${client?.name}`,
-    });
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('run-reconciliation', {
+        body: { clientId, runType: 'manual' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Reconciliation Started',
+        description: `Running reconciliation for ${client?.name}`,
+      });
+    } catch (error) {
+      console.error('Reconciliation error:', error);
+      toast({
+        title: 'Reconciliation Failed',
+        description: error instanceof Error ? error.message : 'Failed to start reconciliation',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleViewHistory = (clientId: string) => {
@@ -108,6 +125,8 @@ const Index = () => {
           onRunReconciliation={handleRunReconciliation}
           onViewHistory={handleViewHistory}
           onReconnect={handleReconnect}
+          selectedClientIds={selectedClientIds}
+          onSelectionChange={setSelectedClientIds}
         />
       </main>
     </div>

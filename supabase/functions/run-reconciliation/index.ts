@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +8,8 @@ const corsHeaders = {
 
 interface ReconciliationRequest {
   clientId?: string;
-  runType: 'scheduled' | 'manual';
+  runType: 'scheduled' | 'manual' | 'bulk';
+  clientIds?: string[];
 }
 
 interface N8nWebhookPayload {
@@ -45,11 +46,14 @@ serve(async (req: Request) => {
     console.log('Reconciliation request received');
     
     if (req.method === 'POST') {
-      const { clientId, runType }: ReconciliationRequest = await req.json();
+      const { clientId, runType, clientIds }: ReconciliationRequest = await req.json();
       
       if (runType === 'scheduled') {
         // Run for all connected clients
         return await runScheduledReconciliation();
+      } else if (runType === 'bulk' && clientIds && clientIds.length > 0) {
+        // Run for multiple clients with rate limiting
+        return await runBulkReconciliation(clientIds);
       } else if (runType === 'manual' && clientId) {
         // Run for specific client
         return await runManualReconciliation(clientId);
@@ -149,16 +153,144 @@ async function runManualReconciliation(clientId: string) {
   );
 }
 
-async function processClientReconciliation(clientId: string, runType: 'scheduled' | 'manual') {
-  // Get client details
+// New bulk reconciliation function
+async function runBulkReconciliation(clientIds: string[]) {
+  console.log(`Starting bulk reconciliation for ${clientIds.length} clients`);
+  
+  // Add all clients to the sync queue
+  const queueItems = clientIds.map(clientId => ({
+    client_id: clientId,
+    operation_type: 'bulk_reconciliation',
+    priority: 3,
+    parameters: { run_type: 'bulk' }
+  }));
+
+  const { error: queueError } = await supabase
+    .from('qbo_sync_queue')
+    .insert(queueItems);
+
+  if (queueError) {
+    throw new Error(`Failed to queue reconciliations: ${queueError.message}`);
+  }
+
+  // Process queue with rate limiting (max 5 concurrent)
+  const results = await processBulkQueue(clientIds);
+
+  return new Response(
+    JSON.stringify({ 
+      message: `Bulk reconciliation queued for ${clientIds.length} clients`,
+      results 
+    }),
+    { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+  );
+}
+
+async function processBulkQueue(clientIds: string[]) {
+  const results = [];
+  const maxConcurrent = 5;
+  
+  for (let i = 0; i < clientIds.length; i += maxConcurrent) {
+    const batch = clientIds.slice(i, i + maxConcurrent);
+    
+    const batchPromises = batch.map(async (clientId) => {
+      try {
+        // Add delay between requests
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return await processClientReconciliation(clientId, 'manual');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        return { clientId, error: errorMessage };
+      }
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+  }
+
+  return results;
+}
+
+async function processClientReconciliation(clientId: string, runType: 'scheduled' | 'manual', retryCount = 0) {
+  const maxRetries = 3;
+  
+  // Get client details with QBO connection
   const { data: client, error: clientError } = await supabase
     .from('clients')
-    .select('*')
+    .select(`
+      *,
+      qbo_connections!inner(
+        id,
+        access_token,
+        refresh_token,
+        token_expires_at,
+        connection_status,
+        realm_id
+      )
+    `)
     .eq('id', clientId)
     .single();
 
   if (clientError || !client) {
     throw new Error(`Client not found: ${clientError?.message}`);
+  }
+
+  const connection = client.qbo_connections[0];
+  if (!connection) {
+    throw new Error('No QuickBooks connection found for client');
+  }
+
+  // Check if token needs refresh
+  let accessToken = connection.access_token;
+  const tokenExpiry = new Date(connection.token_expires_at);
+  const now = new Date();
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  if (tokenExpiry <= sevenDaysFromNow) {
+    console.log(`Token expires soon for client ${clientId}, refreshing...`);
+    
+    try {
+      const refreshResult = await supabase.functions.invoke('quickbooks-token-refresh', {
+        body: { connectionId: connection.id }
+      });
+
+      if (refreshResult.error || !refreshResult.data?.success) {
+        throw new Error(`Token refresh failed: ${refreshResult.data?.error || refreshResult.error?.message}`);
+      }
+
+      // Get updated token
+      const { data: updatedConnection } = await supabase
+        .from('qbo_connections')
+        .select('access_token')
+        .eq('id', connection.id)
+        .single();
+
+      if (updatedConnection) {
+        accessToken = updatedConnection.access_token;
+      }
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      
+      // If refresh fails and it's not the last retry, throw to trigger retry
+      if (retryCount < maxRetries) {
+        throw new Error(`Token refresh failed, will retry: ${refreshError instanceof Error ? refreshError.message : 'Unknown error'}`);
+      }
+      
+      // Mark connection as needing reconnect
+      await supabase
+        .from('qbo_connections')
+        .update({ connection_status: 'needs_reconnect' })
+        .eq('id', connection.id);
+        
+      throw new Error('Token refresh failed after max retries');
+    }
+  }
+
+  // Decrypt access token for use
+  let decryptedToken = accessToken;
+  try {
+    decryptedToken = atob(accessToken); // Simple base64 decode - matches encryption in token-refresh
+  } catch (error) {
+    console.error('Token decryption failed:', error);
   }
 
   // Create reconciliation run record
@@ -167,7 +299,8 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
     .insert({
       client_id: clientId,
       run_type: runType,
-      status: 'running'
+      status: 'running',
+      retry_count: retryCount
     })
     .select()
     .single();
@@ -177,20 +310,23 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
   }
 
   try {
-    // Prepare webhook payload
+    // Prepare webhook payload with real QBOA data
     const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/run-reconciliation?runId=${runRecord.id}`;
     
     const webhookPayload: N8nWebhookPayload = {
-      realm_id: client.realm_id,
-      access_token: 'mock_access_token', // In production, get from OAuth tokens table
-      client_name: client.name,
+      realm_id: connection.realm_id,
+      access_token: decryptedToken,
+      client_name: client.qbo_company_name || client.name,
       run_id: runRecord.id,
       callback_url: callbackUrl
     };
 
-    console.log('Calling n8n webhook:', webhookPayload);
+    console.log(`Calling n8n webhook for client ${client.name}:`, { ...webhookPayload, access_token: '[REDACTED]' });
 
-    // Call n8n webhook
+    // Call n8n webhook with exponential backoff
+    const baseDelay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+    await new Promise(resolve => setTimeout(resolve, baseDelay));
+
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
@@ -200,31 +336,77 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
     });
 
     if (!response.ok) {
-      throw new Error(`n8n webhook failed: ${response.status} ${response.statusText}`);
+      const responseText = await response.text();
+      throw new Error(`n8n webhook failed: ${response.status} ${response.statusText} - ${responseText}`);
     }
 
     const webhookResult = await response.json();
     console.log('n8n webhook response:', webhookResult);
 
+    // Log successful reconciliation start
+    await logReconciliationEvent(clientId, 'reconciliation_started', 'Reconciliation workflow initiated successfully');
+
     return {
       clientId,
       runId: runRecord.id,
       status: 'initiated',
-      message: 'Reconciliation started successfully'
+      message: 'Reconciliation started successfully',
+      retryCount
     };
 
-  } catch (error: any) {
+  } catch (error) {
+    console.error(`Reconciliation failed for client ${clientId} (attempt ${retryCount + 1}):`, error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
+    // Check if it's an auth error and we haven't hit max retries
+    const isAuthError = errorMessage.includes('401') || errorMessage.includes('unauthorized') || errorMessage.includes('invalid_grant');
+    
+    if (isAuthError && retryCount < maxRetries) {
+      console.log(`Auth error detected for client ${clientId}, retrying with fresh token...`);
+      
+      // Update retry count in run record
+      await supabase
+        .from('reconciliation_runs')
+        .update({ retry_count: retryCount + 1 })
+        .eq('id', runRecord.id);
+        
+      // Retry with incremented count
+      return await processClientReconciliation(clientId, runType, retryCount + 1);
+    }
+
+    // Log the error
+    await logReconciliationEvent(clientId, 'reconciliation_failed', errorMessage);
+
     // Update run record with error
     await supabase
       .from('reconciliation_runs')
       .update({
         status: 'failed',
-        error_message: error.message,
-        completed_at: new Date().toISOString()
+        error_message: errorMessage,
+        completed_at: new Date().toISOString(),
+        retry_count: retryCount
       })
       .eq('id', runRecord.id);
 
     throw error;
+  }
+}
+
+async function logReconciliationEvent(clientId: string, eventType: string, message: string) {
+  try {
+    await supabase
+      .from('notification_logs')
+      .insert({
+        client_id: clientId,
+        notification_type: 'audit',
+        recipient: 'system',
+        subject: `Reconciliation Event: ${eventType}`,
+        message: message,
+        status: 'delivered'
+      });
+  } catch (error) {
+    console.error('Failed to log reconciliation event:', error);
   }
 }
 
