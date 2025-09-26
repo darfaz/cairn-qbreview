@@ -416,14 +416,80 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      qbo_connections_safe: {
+        Row: {
+          accountant_access: boolean | null
+          client_id: string | null
+          connection_method: string | null
+          connection_status: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          realm_id: string | null
+          refresh_token_status: string | null
+          refresh_token_updated_at: string | null
+          scope: string | null
+          token_expires_at: string | null
+          token_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accountant_access?: boolean | null
+          client_id?: string | null
+          connection_method?: string | null
+          connection_status?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          realm_id?: string | null
+          refresh_token_status?: never
+          refresh_token_updated_at?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          token_status?: never
+          updated_at?: string | null
+        }
+        Update: {
+          accountant_access?: boolean | null
+          client_id?: string | null
+          connection_method?: string | null
+          connection_status?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          realm_id?: string | null
+          refresh_token_status?: never
+          refresh_token_updated_at?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          token_status?: never
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_connections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      hash_token: {
+        Args: { _token: string }
+        Returns: string
+      }
       user_can_access_client: {
         Args: { _client_id: string; _user_id: string }
         Returns: boolean
       }
       user_can_access_qbo_connection: {
+        Args: { _connection_client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_can_modify_qbo_tokens: {
         Args: { _connection_client_id: string; _user_id: string }
         Returns: boolean
       }
