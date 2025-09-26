@@ -22,9 +22,16 @@ export function QBConnectButton({ onConnectionSuccess }: QBConnectButtonProps) {
         .single();
 
       if (profileError || !profile?.qboa_oauth_enabled) {
+        console.error('OAuth configuration issue:', { profileError, profile });
         toast.error('Please configure your QuickBooks OAuth settings in Settings first');
         return;
       }
+
+      // Diagnostic logging
+      const environment = profile.intuit_client_id?.includes('sandbox') ? 'sandbox' : 'production';
+      console.log('QuickBooks OAuth Environment:', environment);
+      console.log('Client ID exists:', !!profile.intuit_client_id);
+      console.log('Redirect URI configured:', profile.oauth_redirect_uri || 'using default');
 
       // Build OAuth URL
       const params = new URLSearchParams({
@@ -37,6 +44,14 @@ export function QBConnectButton({ onConnectionSuccess }: QBConnectButtonProps) {
       });
 
       const oauthUrl = `https://appcenter.intuit.com/connect/oauth2?${params}`;
+      
+      // Debug: Show OAuth URL (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('OAuth URL being used:', oauthUrl);
+        if (confirm('Debug Mode: Show OAuth URL?\n\n' + oauthUrl)) {
+          console.log('User confirmed OAuth redirect');
+        }
+      }
       
       // Redirect to QuickBooks OAuth
       window.location.href = oauthUrl;

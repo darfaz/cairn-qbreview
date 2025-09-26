@@ -70,7 +70,18 @@ serve(async (req) => {
       .single();
 
     if (stateError || !stateRecord) {
-      console.error('Invalid or expired state parameter:', state, stateError);
+      console.error('State validation failed - Received state:', state);
+      console.error('State lookup error:', stateError);
+      console.error('State record found:', stateRecord);
+      
+      // Check for any stored states for debugging
+      const { data: allStates } = await supabase
+        .from('qbo_oauth_states')
+        .select('state, expires_at, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      console.log('Recent stored states:', allStates);
+      
       const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=invalid_state&error_description=Invalid security token`;
       
       return new Response(null, {
@@ -136,7 +147,12 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', tokenResponse.status, errorText);
+      console.error('Token exchange failed - Status:', tokenResponse.status);
+      console.error('Token exchange failed - Response:', errorText);
+      console.error('Token exchange failed - Request URL:', tokenUrl);
+      console.error('Token exchange failed - Request body:', tokenParams.toString());
+      console.error('Token exchange failed - Authorization header (client_id):', profile.intuit_client_id);
+      
       const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=token_exchange_failed&error_description=Failed to exchange authorization code`;
       
       return new Response(null, {
@@ -224,7 +240,7 @@ serve(async (req) => {
     // Log successful connection
     await logOAuthEvent(supabase, userId, 'oauth_success', `QuickBooks OAuth completed successfully for realm ${realmId}`);
 
-    console.log(`OAuth flow completed successfully for user ${userId}, realm ${realmId}`);
+    console.log(`OAuth successful for realmId: ${realmId}, userId: ${userId}, environment: ${environment}`);
 
     // Redirect to company selection page with success
     const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?code=${code}&realmId=${realmId}&success=true`;

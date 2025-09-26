@@ -3,6 +3,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ClientGrid } from '@/components/dashboard/ClientGrid';
 import { QBConnectButton } from '@/components/quickbooks/QBConnectButton';
+import { DebugPanel } from '@/components/dashboard/DebugPanel';
 import { generateMockClients, mockSummary } from '@/data/mockClients';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +12,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasClients, setHasClients] = useState<boolean | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const { toast } = useToast();
   
   const allClients = useMemo(() => generateMockClients(105), []);
@@ -129,6 +131,14 @@ const Index = () => {
           onSelectionChange={setSelectedClientIds}
         />
       </main>
+
+      {/* Debug panel - only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <DebugPanel
+          isVisible={showDebugPanel}
+          onToggle={() => setShowDebugPanel(!showDebugPanel)}
+        />
+      )}
     </div>
   );
 };
