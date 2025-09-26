@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Calendar, Settings as SettingsIcon } from 'lucide-react';
+import { Loader2, Save, Calendar, Settings as SettingsIcon, Key } from 'lucide-react';
 
 interface ScheduledRunSettings {
   id: string;
@@ -16,14 +16,24 @@ interface ScheduledRunSettings {
   next_run_date: string | null;
 }
 
+interface OAuthSettings {
+  intuit_client_id: string | null;
+  intuit_client_secret: string | null;
+  qboa_oauth_enabled: boolean;
+  oauth_redirect_uri: string | null;
+}
+
 const Settings = () => {
   const [settings, setSettings] = useState<ScheduledRunSettings | null>(null);
+  const [oauthSettings, setOauthSettings] = useState<OAuthSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingOauth, setSavingOauth] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSettings();
+    fetchOAuthSettings();
   }, []);
 
   const fetchSettings = async () => {
@@ -48,6 +58,34 @@ const Settings = () => {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOAuthSettings = async () => {
+    try {
+      // Get the user's firm
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('firm_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!profile?.firm_id) return;
+
+      const { data, error } = await supabase
+        .from('firms')
+        .select('intuit_client_id, intuit_client_secret, qboa_oauth_enabled, oauth_redirect_uri')
+        .eq('id', profile.firm_id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching OAuth settings:', error);
+        return;
+      }
+
+      setOauthSettings(data);
+    } catch (error) {
+      console.error('Error fetching OAuth settings:', error);
     }
   };
 
@@ -81,6 +119,52 @@ const Settings = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOAuthSave = async () => {
+    if (!oauthSettings) return;
+
+    setSavingOauth(true);
+    try {
+      // Get the user's firm
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('firm_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!profile?.firm_id) {
+        throw new Error('No firm associated with user');
+      }
+
+      const { error } = await supabase
+        .from('firms')
+        .update({
+          intuit_client_id: oauthSettings.intuit_client_id,
+          intuit_client_secret: oauthSettings.intuit_client_secret,
+          qboa_oauth_enabled: oauthSettings.qboa_oauth_enabled,
+          oauth_redirect_uri: oauthSettings.oauth_redirect_uri,
+        })
+        .eq('id', profile.firm_id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'OAuth Settings Saved',
+        description: 'QuickBooks OAuth credentials have been updated successfully',
+      });
+    } catch (error: any) {
+      console.error('Error saving OAuth settings:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save OAuth settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingOauth(false);
     }
   };
 
@@ -231,6 +315,111 @@ const Settings = () => {
                       Run Now
                     </Button>
                   </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* QuickBooks OAuth Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                QuickBooks OAuth Configuration
+              </CardTitle>
+              <CardDescription>
+                Configure QBOA OAuth credentials for connecting to QuickBooks Online
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {oauthSettings && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Enable OAuth Integration</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Allow QuickBooks OAuth connections for this firm
+                      </div>
+                    </div>
+                    <Switch
+                      checked={oauthSettings.qboa_oauth_enabled}
+                      onCheckedChange={(enabled) =>
+                        setOauthSettings({ ...oauthSettings, qboa_oauth_enabled: enabled })
+                      }
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientId">Intuit Client ID</Label>
+                      <Input
+                        id="clientId"
+                        type="text"
+                        value={oauthSettings.intuit_client_id || ''}
+                        onChange={(e) =>
+                          setOauthSettings({
+                            ...oauthSettings,
+                            intuit_client_id: e.target.value,
+                          })
+                        }
+                        placeholder="Enter your Intuit App's Client ID"
+                        disabled={!oauthSettings.qboa_oauth_enabled}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="clientSecret">Intuit Client Secret</Label>
+                      <Input
+                        id="clientSecret"
+                        type="password"
+                        value={oauthSettings.intuit_client_secret || ''}
+                        onChange={(e) =>
+                          setOauthSettings({
+                            ...oauthSettings,
+                            intuit_client_secret: e.target.value,
+                          })
+                        }
+                        placeholder="Enter your Intuit App's Client Secret"
+                        disabled={!oauthSettings.qboa_oauth_enabled}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="redirectUri">OAuth Redirect URI</Label>
+                      <Input
+                        id="redirectUri"
+                        type="url"
+                        value={oauthSettings.oauth_redirect_uri || ''}
+                        onChange={(e) =>
+                          setOauthSettings({
+                            ...oauthSettings,
+                            oauth_redirect_uri: e.target.value,
+                          })
+                        }
+                        placeholder={`${window.location.origin}/api/quickbooks/callback`}
+                        disabled={!oauthSettings.qboa_oauth_enabled}
+                      />
+                      <div className="text-sm text-muted-foreground">
+                        This must match the redirect URI configured in your Intuit app
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="text-sm font-medium mb-2">Setup Instructions</div>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Create an app at <a href="https://developer.intuit.com" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">developer.intuit.com</a></li>
+                      <li>Set the redirect URI in your Intuit app settings</li>
+                      <li>Add scope: com.intuit.quickbooks.accounting</li>
+                      <li>Copy your Client ID and Client Secret here</li>
+                    </ol>
+                  </div>
+
+                  <Button onClick={handleOAuthSave} disabled={savingOauth || !oauthSettings.qboa_oauth_enabled}>
+                    {savingOauth && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    <Save className="h-4 w-4 mr-2" />
+                    Save OAuth Settings
+                  </Button>
                 </>
               )}
             </CardContent>
