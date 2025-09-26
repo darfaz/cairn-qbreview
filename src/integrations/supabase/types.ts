@@ -20,6 +20,7 @@ export type Database = {
           connection_status: string | null
           created_at: string
           dropbox_folder_url: string | null
+          firm_id: string | null
           id: string
           last_review_date: string | null
           name: string
@@ -33,6 +34,7 @@ export type Database = {
           connection_status?: string | null
           created_at?: string
           dropbox_folder_url?: string | null
+          firm_id?: string | null
           id?: string
           last_review_date?: string | null
           name: string
@@ -46,6 +48,7 @@ export type Database = {
           connection_status?: string | null
           created_at?: string
           dropbox_folder_url?: string | null
+          firm_id?: string | null
           id?: string
           last_review_date?: string | null
           name?: string
@@ -54,7 +57,114 @@ export type Database = {
           status?: string | null
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firms: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
         Relationships: []
+      }
+      notification_logs: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          notification_type: string
+          recipient: string
+          reconciliation_run_id: string | null
+          retry_count: number
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          notification_type: string
+          recipient: string
+          reconciliation_run_id?: string | null
+          retry_count?: number
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          notification_type?: string
+          recipient?: string
+          reconciliation_run_id?: string | null
+          retry_count?: number
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_logs_reconciliation_run_id_fkey"
+            columns: ["reconciliation_run_id"]
+            isOneToOne: false
+            referencedRelation: "reconciliation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -85,6 +195,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      qbo_connections: {
+        Row: {
+          access_token: string
+          client_id: string
+          connection_status: string
+          created_at: string
+          expires_at: string
+          id: string
+          realm_id: string
+          refresh_token: string
+          scope: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          client_id: string
+          connection_status?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          realm_id: string
+          refresh_token: string
+          scope?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          client_id?: string
+          connection_status?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          realm_id?: string
+          refresh_token?: string
+          scope?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_connections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reconciliation_runs: {
         Row: {
