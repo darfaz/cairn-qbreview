@@ -76,59 +76,6 @@ export type Database = {
           },
         ]
       }
-      firm_integrations: {
-        Row: {
-          configured_at: string | null
-          configured_by: string | null
-          created_at: string | null
-          firm_id: string | null
-          id: string
-          intuit_app_name: string | null
-          intuit_client_id: string | null
-          intuit_client_secret_encrypted: string | null
-          intuit_environment: string | null
-          is_configured: boolean | null
-          redirect_uri: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          configured_at?: string | null
-          configured_by?: string | null
-          created_at?: string | null
-          firm_id?: string | null
-          id?: string
-          intuit_app_name?: string | null
-          intuit_client_id?: string | null
-          intuit_client_secret_encrypted?: string | null
-          intuit_environment?: string | null
-          is_configured?: boolean | null
-          redirect_uri?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          configured_at?: string | null
-          configured_by?: string | null
-          created_at?: string | null
-          firm_id?: string | null
-          id?: string
-          intuit_app_name?: string | null
-          intuit_client_id?: string | null
-          intuit_client_secret_encrypted?: string | null
-          intuit_environment?: string | null
-          is_configured?: boolean | null
-          redirect_uri?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "firm_integrations_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: true
-            referencedRelation: "firms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       firms: {
         Row: {
           address: string | null
@@ -235,7 +182,11 @@ export type Database = {
           firm_id: string | null
           first_name: string | null
           id: string
+          intuit_client_id: string | null
+          intuit_client_secret: string | null
           last_name: string | null
+          oauth_redirect_uri: string | null
+          qboa_oauth_enabled: boolean
           role: string | null
           updated_at: string
         }
@@ -245,7 +196,11 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id: string
+          intuit_client_id?: string | null
+          intuit_client_secret?: string | null
           last_name?: string | null
+          oauth_redirect_uri?: string | null
+          qboa_oauth_enabled?: boolean
           role?: string | null
           updated_at?: string
         }
@@ -255,7 +210,11 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id?: string
+          intuit_client_id?: string | null
+          intuit_client_secret?: string | null
           last_name?: string | null
+          oauth_redirect_uri?: string | null
+          qboa_oauth_enabled?: boolean
           role?: string | null
           updated_at?: string
         }

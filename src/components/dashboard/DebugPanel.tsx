@@ -30,25 +30,15 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
 
   const loadDebugInfo = async () => {
     try {
-      // Get current user profile and firm integration
+      // Get current user profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('firm_id')
+        .select('intuit_client_id, oauth_redirect_uri')
         .eq('id', user.id)
         .single();
-
-      let integration = null;
-      if (profile?.firm_id) {
-        const { data: firmIntegration } = await supabase
-          .from('firm_integrations')
-          .select('intuit_client_id, intuit_environment, redirect_uri, is_configured')
-          .eq('firm_id', profile.firm_id)
-          .single();
-        integration = firmIntegration;
-      }
 
       // Count QBO connections  
       const { count } = await supabase
@@ -65,13 +55,13 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
         .limit(1);
 
       setDebugInfo({
-        environment: integration?.intuit_environment || 'Unknown',
+        environment: profile?.intuit_client_id?.includes('sandbox') ? 'sandbox' : 'production',
         lastOAuthAttempt: logs?.[0]?.created_at ? new Date(logs[0].created_at) : null,
         lastOAuthResult: logs?.[0]?.status || 'None',
         connectionsCount: count || 0,
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'Not configured',
-        redirectUri: integration?.redirect_uri || 'Using default',
-        clientIdConfigured: !!integration?.intuit_client_id
+        redirectUri: profile?.oauth_redirect_uri || 'Using default',
+        clientIdConfigured: !!profile?.intuit_client_id
       });
     } catch (error) {
       console.error('Failed to load debug info:', error);
