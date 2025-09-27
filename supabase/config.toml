@@ -1,5 +1,8 @@
 project_id = "xfswfetxfqhgvpwlhfce"
 
+[functions.quickbooks-callback]
+verify_jwt = false
+
 [functions.run-reconciliation]
 verify_jwt = false
 

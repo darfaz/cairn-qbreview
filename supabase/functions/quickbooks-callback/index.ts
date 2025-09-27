@@ -36,7 +36,7 @@ serve(async (req) => {
     // Handle OAuth errors
     if (error) {
       console.error('OAuth error received:', error, errorDescription);
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || '')}`;
+      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || '')}`;
       
       return new Response(null, {
         status: 302,
@@ -50,7 +50,7 @@ serve(async (req) => {
     // Validate required parameters
     if (!code || !state || !realmId) {
       console.error('Missing required OAuth parameters:', { code: !!code, state: !!state, realmId: !!realmId });
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=invalid_request&error_description=Missing required parameters`;
+      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=invalid_request&error_description=Missing required parameters`;
       
       return new Response(null, {
         status: 302,
@@ -82,7 +82,7 @@ serve(async (req) => {
         .limit(5);
       console.log('Recent stored states:', allStates);
       
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=invalid_state&error_description=Invalid security token`;
+      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=invalid_state&error_description=Invalid security token`;
       
       return new Response(null, {
         status: 302,
@@ -102,16 +102,13 @@ serve(async (req) => {
       .delete()
       .eq('state', state);
 
-    // Get user's OAuth configuration
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('intuit_client_id, intuit_client_secret, oauth_redirect_uri')
-      .eq('id', userId)
-      .single();
+    // Get global Intuit credentials from secrets
+    const INTUIT_CLIENT_ID = Deno.env.get('INTUIT_CLIENT_ID');
+    const INTUIT_CLIENT_SECRET = Deno.env.get('INTUIT_CLIENT_SECRET');
 
-    if (profileError || !profile) {
-      console.error('Failed to get user profile:', profileError);
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=configuration_error&error_description=User configuration not found`;
+    if (!INTUIT_CLIENT_ID || !INTUIT_CLIENT_SECRET) {
+      console.error('Missing Intuit credentials in environment');
+      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=configuration_error&error_description=Missing OAuth configuration`;
       
       return new Response(null, {
         status: 302,
@@ -127,7 +124,7 @@ serve(async (req) => {
       ? 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
       : 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
 
-    const redirectUri = profile.oauth_redirect_uri || `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
+    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
     
     const tokenParams = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -138,7 +135,7 @@ serve(async (req) => {
     const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(`${profile.intuit_client_id}:${profile.intuit_client_secret}`)}`,
+        'Authorization': `Basic ${btoa(`${INTUIT_CLIENT_ID}:${INTUIT_CLIENT_SECRET}`)}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'
       },
@@ -151,9 +148,9 @@ serve(async (req) => {
       console.error('Token exchange failed - Response:', errorText);
       console.error('Token exchange failed - Request URL:', tokenUrl);
       console.error('Token exchange failed - Request body:', tokenParams.toString());
-      console.error('Token exchange failed - Authorization header (client_id):', profile.intuit_client_id);
+      console.error('Token exchange failed - Authorization header (client_id):', INTUIT_CLIENT_ID);
       
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=token_exchange_failed&error_description=Failed to exchange authorization code`;
+      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=token_exchange_failed&error_description=Failed to exchange authorization code`;
       
       return new Response(null, {
         status: 302,
@@ -197,7 +194,7 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Failed to update connection:', updateError);
-        const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=storage_failed&error_description=Failed to update connection`;
+        const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=storage_failed&error_description=Failed to update connection`;
         
         return new Response(null, {
           status: 302,
@@ -225,7 +222,7 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Failed to create connection:', insertError);
-        const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=storage_failed&error_description=Failed to store connection`;
+        const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=storage_failed&error_description=Failed to store connection`;
         
         return new Response(null, {
           status: 302,
@@ -242,8 +239,8 @@ serve(async (req) => {
 
     console.log(`OAuth successful for realmId: ${realmId}, userId: ${userId}, environment: ${environment}`);
 
-    // Redirect to company selection page with success
-    const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?code=${code}&realmId=${realmId}&success=true`;
+    // Redirect to dashboard with success
+    const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?success=true&realmId=${realmId}`;
     
     return new Response(null, {
       status: 302,
@@ -256,7 +253,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Callback endpoint error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=internal_error&error_description=${encodeURIComponent(errorMessage)}`;
+    const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=internal_error&error_description=${encodeURIComponent(errorMessage)}`;
     
     return new Response(null, {
       status: 302,
