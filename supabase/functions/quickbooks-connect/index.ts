@@ -117,8 +117,8 @@ serve(async (req) => {
 
     // Determine base URL based on environment
     const baseUrl = finalEnvironment === 'sandbox' 
-      ? 'https://sandbox.appcenter.intuit.com' 
-      : 'https://appcenter.intuit.com';
+      ? 'https://app.sandbox.qbo.intuit.com/app' 
+      : 'https://app.qbo.intuit.com/app';
 
     // Build authorization URL with all required parameters
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
