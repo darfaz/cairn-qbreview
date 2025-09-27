@@ -77,7 +77,21 @@ serve(async (req) => {
       );
     }
 
-    const { environment = 'production' }: ConnectRequest = await req.json();
+    // Get environment from Edge Function secrets (controlled by whoever deploys)
+    const environment = Deno.env.get('INTUIT_ENVIRONMENT') || 'sandbox';
+
+    // Optional: allow override from request body if needed
+    let finalEnvironment = environment;
+    try {
+      const body = await req.json();
+      if (body?.environment) {
+        finalEnvironment = body.environment;
+        console.log('Environment overridden by request:', finalEnvironment);
+      }
+    } catch (e) {
+      // No body provided, use environment from secrets
+      console.log('Using environment from secrets:', finalEnvironment);
+    }
 
     // Generate secure random state parameter for CSRF protection
     const state = globalThis.crypto.randomUUID();
@@ -90,7 +104,7 @@ serve(async (req) => {
         state,
         user_id: user.id,
         expires_at: stateExpiry.toISOString(),
-        environment
+        environment: finalEnvironment
       });
 
     if (stateError) {
@@ -102,7 +116,7 @@ serve(async (req) => {
     }
 
     // Determine base URL based on environment
-    const baseUrl = environment === 'sandbox' 
+    const baseUrl = finalEnvironment === 'sandbox' 
       ? 'https://sandbox.appcenter.intuit.com' 
       : 'https://appcenter.intuit.com';
 
@@ -120,7 +134,7 @@ serve(async (req) => {
 
     const authUrl = `${baseUrl}/connect/oauth2?${params}`;
 
-    console.log('Generated OAuth URL for user:', user.id, 'Environment:', environment);
+    console.log('Generated OAuth URL for user:', user.id, 'Environment:', finalEnvironment);
 
     return new Response(
       JSON.stringify({ 
