@@ -115,10 +115,8 @@ serve(async (req) => {
       );
     }
 
-    // Determine base URL based on environment
-    const baseUrl = finalEnvironment === 'sandbox' 
-      ? 'https://app.sandbox.qbo.intuit.com/app' 
-      : 'https://app.qbo.intuit.com/app';
+    // OAuth authorization endpoint (same for sandbox and production)
+    const authorizationBaseUrl = 'https://appcenter.intuit.com/connect/oauth2';
 
     // Build authorization URL with all required parameters
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
@@ -128,11 +126,10 @@ serve(async (req) => {
       scope: 'com.intuit.quickbooks.accounting',
       redirect_uri: redirectUri,
       response_type: 'code',
-      state: state,
-      access_type: 'offline' // Ensures we get refresh token
+      state: state
     });
 
-    const authUrl = `${baseUrl}/connect/oauth2?${params}`;
+    const authUrl = `${authorizationBaseUrl}?${params}`;
 
     console.log('Generated OAuth URL for user:', user.id, 'Environment:', finalEnvironment);
 
