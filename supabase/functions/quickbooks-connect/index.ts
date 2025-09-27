@@ -48,24 +48,44 @@ serve(async (req) => {
       );
     }
 
-    // Get user's OAuth settings
+    // Get user's profile and firm integration settings
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('intuit_client_id, oauth_redirect_uri, qboa_oauth_enabled')
+      .select('firm_id')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile?.qboa_oauth_enabled) {
+    if (profileError || !profile?.firm_id) {
       return new Response(
         JSON.stringify({ 
-          error: 'QuickBooks OAuth is not configured. Please configure OAuth settings first.',
+          error: 'User must be associated with a firm to use QuickBooks integration.',
           needsSetup: true 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { environment = 'production' }: ConnectRequest = await req.json();
+    // Get firm's QuickBooks integration settings
+    const { data: integration, error: integrationError } = await supabase
+      .from('firm_integrations')
+      .select('intuit_client_id, intuit_environment, redirect_uri, is_configured')
+      .eq('firm_id', profile.firm_id)
+      .single();
+
+    if (integrationError || !integration?.is_configured || !integration?.intuit_client_id) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'QuickBooks integration is not configured for your firm. Please contact your firm administrator.',
+          needsSetup: true 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { environment }: ConnectRequest = await req.json();
+    
+    // Use firm's configured environment or the requested one
+    const targetEnvironment = environment || integration.intuit_environment || 'sandbox';
 
     // Generate secure random state parameter for CSRF protection
     const state = globalThis.crypto.randomUUID();
@@ -78,7 +98,7 @@ serve(async (req) => {
         state,
         user_id: user.id,
         expires_at: stateExpiry.toISOString(),
-        environment
+        environment: targetEnvironment
       });
 
     if (stateError) {
@@ -90,15 +110,15 @@ serve(async (req) => {
     }
 
     // Determine base URL based on environment
-    const baseUrl = environment === 'sandbox' 
+    const baseUrl = targetEnvironment === 'sandbox' 
       ? 'https://sandbox.appcenter.intuit.com' 
       : 'https://appcenter.intuit.com';
 
     // Build authorization URL with all required parameters
-    const redirectUri = profile.oauth_redirect_uri || `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
+    const redirectUri = integration.redirect_uri || `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
     
     const params = new URLSearchParams({
-      client_id: profile.intuit_client_id,
+      client_id: integration.intuit_client_id,
       scope: 'com.intuit.quickbooks.accounting',
       redirect_uri: redirectUri,
       response_type: 'code',
@@ -108,7 +128,7 @@ serve(async (req) => {
 
     const authUrl = `${baseUrl}/connect/oauth2?${params}`;
 
-    console.log('Generated OAuth URL for user:', user.id, 'Environment:', environment);
+    console.log('Generated OAuth URL for user:', user.id, 'Firm:', profile.firm_id, 'Environment:', targetEnvironment);
 
     return new Response(
       JSON.stringify({ 

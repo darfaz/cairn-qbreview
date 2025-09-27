@@ -102,16 +102,36 @@ serve(async (req) => {
       .delete()
       .eq('state', state);
 
-    // Get user's OAuth configuration
+    // Get user's profile to find their firm
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('intuit_client_id, intuit_client_secret, oauth_redirect_uri')
+      .select('firm_id')
       .eq('id', userId)
       .single();
 
-    if (profileError || !profile) {
-      console.error('Failed to get user profile:', profileError);
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=configuration_error&error_description=User configuration not found`;
+    if (profileError || !profile?.firm_id) {
+      console.error('Failed to get user profile or firm:', profileError);
+      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=configuration_error&error_description=User must be associated with a firm`;
+      
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': frontendUrl,
+          ...corsHeaders
+        }
+      });
+    }
+
+    // Get firm's OAuth integration settings
+    const { data: integration, error: integrationError } = await supabase
+      .from('firm_integrations')
+      .select('intuit_client_id, intuit_client_secret_encrypted, redirect_uri')
+      .eq('firm_id', profile.firm_id)
+      .single();
+
+    if (integrationError || !integration?.intuit_client_id || !integration?.intuit_client_secret_encrypted) {
+      console.error('Failed to get firm integration settings:', integrationError);
+      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=configuration_error&error_description=Firm QuickBooks integration not configured`;
       
       return new Response(null, {
         status: 302,
@@ -127,7 +147,7 @@ serve(async (req) => {
       ? 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
       : 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
 
-    const redirectUri = profile.oauth_redirect_uri || `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
+    const redirectUri = integration.redirect_uri || `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
     
     const tokenParams = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -138,7 +158,7 @@ serve(async (req) => {
     const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(`${profile.intuit_client_id}:${profile.intuit_client_secret}`)}`,
+        'Authorization': `Basic ${btoa(`${integration.intuit_client_id}:${integration.intuit_client_secret_encrypted}`)}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'
       },
@@ -151,7 +171,7 @@ serve(async (req) => {
       console.error('Token exchange failed - Response:', errorText);
       console.error('Token exchange failed - Request URL:', tokenUrl);
       console.error('Token exchange failed - Request body:', tokenParams.toString());
-      console.error('Token exchange failed - Authorization header (client_id):', profile.intuit_client_id);
+      console.error('Token exchange failed - Authorization header (client_id):', integration.intuit_client_id);
       
       const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=token_exchange_failed&error_description=Failed to exchange authorization code`;
       
@@ -173,12 +193,52 @@ serve(async (req) => {
     // Calculate token expiry time
     const tokenExpiresAt = new Date(Date.now() + tokens.expires_in * 1000);
     
-    // Check if connection already exists for this realm
+    // Find or create client record for this firm and realm
+    const { data: existingClient, error: clientLookupError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('realm_id', realmId)
+      .eq('firm_id', profile.firm_id)
+      .single();
+
+    let clientId = existingClient?.id;
+    
+    if (!clientId) {
+      // Create new client record
+      const { data: newClient, error: clientCreateError } = await supabase
+        .from('clients')
+        .insert({
+          name: `QuickBooks Company ${realmId}`,
+          realm_id: realmId,
+          firm_id: profile.firm_id,
+          connection_status: 'connected',
+          is_active: true
+        })
+        .select('id')
+        .single();
+
+      if (clientCreateError) {
+        console.error('Failed to create client record:', clientCreateError);
+        const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/company-selection?error=storage_failed&error_description=Failed to create client record`;
+        
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': frontendUrl,
+            ...corsHeaders
+          }
+        });
+      }
+      
+      clientId = newClient.id;
+    }
+    
+    // Check if connection already exists for this realm and client
     const { data: existingConnection, error: connectionCheckError } = await supabase
       .from('qbo_connections')
       .select('id')
       .eq('realm_id', realmId)
-      .eq('client_id', userId) // Assuming client_id maps to user for this use case
+      .eq('client_id', clientId)
       .single();
 
     if (existingConnection) {
@@ -212,14 +272,14 @@ serve(async (req) => {
       const { error: insertError } = await supabase
         .from('qbo_connections')
         .insert({
-          client_id: userId, // This might need to be adjusted based on your schema
+          client_id: clientId,
           realm_id: realmId,
           access_token: encryptedAccessToken,
           refresh_token: encryptedRefreshToken,
           token_expires_at: tokenExpiresAt.toISOString(),
           refresh_token_updated_at: new Date().toISOString(),
           connection_status: 'connected',
-          expires_at: tokenExpiresAt.toISOString(), // Assuming this is also needed
+          expires_at: tokenExpiresAt.toISOString(),
           accountant_access: true
         });
 
@@ -237,8 +297,17 @@ serve(async (req) => {
       }
     }
 
+    // Update client connection status
+    await supabase
+      .from('clients')
+      .update({
+        connection_status: 'connected',
+        last_sync_at: new Date().toISOString()
+      })
+      .eq('id', clientId);
+
     // Log successful connection
-    await logOAuthEvent(supabase, userId, 'oauth_success', `QuickBooks OAuth completed successfully for realm ${realmId}`);
+    await logOAuthEvent(supabase, clientId, 'oauth_success', `QuickBooks OAuth completed successfully for realm ${realmId}`);
 
     console.log(`OAuth successful for realmId: ${realmId}, userId: ${userId}, environment: ${environment}`);
 
@@ -274,12 +343,12 @@ async function encryptToken(token: string): Promise<string> {
   return btoa(token);
 }
 
-async function logOAuthEvent(supabase: any, userId: string, eventType: string, message: string) {
+async function logOAuthEvent(supabase: any, clientId: string, eventType: string, message: string) {
   try {
     await supabase
       .from('notification_logs')
       .insert({
-        client_id: userId,
+        client_id: clientId,
         notification_type: 'audit',
         recipient: 'system',
         subject: `OAuth Event: ${eventType}`,

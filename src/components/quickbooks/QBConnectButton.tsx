@@ -2,63 +2,68 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface QBConnectButtonProps {
   onConnectionSuccess?: () => void;
 }
 
 export function QBConnectButton({ onConnectionSuccess }: QBConnectButtonProps) {
+  const { user } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async () => {
-    setIsConnecting(true);
+    if (!user) return;
     
+    setIsConnecting(true);
     try {
-      // Get current user's OAuth settings
-      const { data: profile, error: profileError } = await supabase
+      console.log('🔗 Starting QuickBooks connection...');
+      
+      // Get user's firm
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('intuit_client_id, oauth_redirect_uri, qboa_oauth_enabled')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .select('firm_id')
+        .eq('id', user.id)
         .single();
 
-      if (profileError || !profile?.qboa_oauth_enabled) {
-        console.error('OAuth configuration issue:', { profileError, profile });
-        toast.error('Please configure your QuickBooks OAuth settings in Settings first');
+      if (!profile?.firm_id) {
+        toast.error('You must be associated with a firm to connect QuickBooks');
         return;
       }
 
-      // Diagnostic logging
-      const environment = profile.intuit_client_id?.includes('sandbox') ? 'sandbox' : 'production';
-      console.log('QuickBooks OAuth Environment:', environment);
-      console.log('Client ID exists:', !!profile.intuit_client_id);
-      console.log('Redirect URI configured:', profile.oauth_redirect_uri || 'using default');
+      // Get firm's QuickBooks integration
+      const { data: integration } = await supabase
+        .from('firm_integrations')
+        .select('intuit_client_id, intuit_environment, is_configured')
+        .eq('firm_id', profile.firm_id)
+        .single();
 
-      // Build OAuth URL
-      const params = new URLSearchParams({
-        client_id: profile.intuit_client_id,
-        scope: 'com.intuit.quickbooks.accounting',
-        redirect_uri: profile.oauth_redirect_uri || `${window.location.origin}/company-selection`,
-        response_type: 'code',
-        access_type: 'offline',
-        approval_prompt: 'auto'
+      if (!integration?.is_configured) {
+        toast.error('QuickBooks integration is not configured for your firm. Please contact your administrator.');
+        return;
+      }
+
+      console.log('📋 Environment:', integration.intuit_environment);
+      console.log('🔑 Client ID configured:', !!integration.intuit_client_id);
+
+      // Call the connect function
+      const { data, error } = await supabase.functions.invoke('quickbooks-connect', {
+        body: { environment: integration.intuit_environment }
       });
 
-      const oauthUrl = `https://appcenter.intuit.com/connect/oauth2?${params}`;
-      
-      // Debug: Show OAuth URL (only in development)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('OAuth URL being used:', oauthUrl);
-        if (confirm('Debug Mode: Show OAuth URL?\n\n' + oauthUrl)) {
-          console.log('User confirmed OAuth redirect');
+      if (error) throw error;
+
+      if (data?.authUrl) {
+        console.log('🚀 Redirecting to OAuth URL:', data.authUrl);
+        // Show alert with OAuth URL for debugging
+        if (process.env.NODE_ENV === 'development') {
+          alert(`OAuth URL: ${data.authUrl}`);
         }
+        window.location.href = data.authUrl;
       }
-      
-      // Redirect to QuickBooks OAuth
-      window.location.href = oauthUrl;
-      
     } catch (error) {
       console.error('Connection error:', error);
-      toast.error('Failed to start connection process');
+      toast.error('Failed to connect to QuickBooks. Please try again.');
     } finally {
       setIsConnecting(false);
     }

@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusIndicator } from '@/components/dashboard/StatusIndicator';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, RefreshCw, Plus } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Table,
   TableBody,
@@ -25,10 +27,11 @@ interface ConnectedCompany {
 }
 
 const CompanyManagement = () => {
+  const { user } = useAuth();
   const [companies, setCompanies] = useState<ConnectedCompany[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<ConnectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -83,7 +86,7 @@ const CompanyManagement = () => {
       console.error('Error fetching companies:', error);
       toast.error('Failed to fetch connected companies');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -104,31 +107,33 @@ const CompanyManagement = () => {
 
   const handleReconnect = async (companyId: string, realmId: string) => {
     try {
-      // Get OAuth settings
+      // Check if firm integration is configured
+      if (!user) return;
+
       const { data: profile } = await supabase
         .from('profiles')
-        .select('intuit_client_id, oauth_redirect_uri')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .select('firm_id')
+        .eq('id', user.id)
         .single();
 
-      if (!profile?.intuit_client_id) {
-        toast.error('Please configure OAuth settings first');
+      if (!profile?.firm_id) {
+        toast.error('You must be associated with a firm');
         return;
       }
 
-      // Build OAuth URL with specific realmId
-      const params = new URLSearchParams({
-        client_id: profile.intuit_client_id,
-        scope: 'com.intuit.quickbooks.accounting',
-        redirect_uri: profile.oauth_redirect_uri || `${window.location.origin}/settings/companies`,
-        response_type: 'code',
-        access_type: 'offline',
-        approval_prompt: 'auto',
-        realmId: realmId
-      });
+      const { data: integration } = await supabase
+        .from('firm_integrations')
+        .select('is_configured')
+        .eq('firm_id', profile.firm_id)
+        .single();
 
-      const oauthUrl = `https://appcenter.intuit.com/connect/oauth2?${params}`;
-      window.location.href = oauthUrl;
+      if (!integration?.is_configured) {
+        toast.error('QuickBooks integration is not configured for your firm');
+        return;
+      }
+
+      // Redirect to connect flow
+      window.location.href = '/company-selection';
       
     } catch (error) {
       console.error('Reconnection error:', error);
@@ -155,7 +160,7 @@ const CompanyManagement = () => {
     window.location.href = '/company-selection';
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="flex items-center justify-center p-8">
