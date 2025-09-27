@@ -19,8 +19,10 @@ serve(async (req) => {
   try {
     // Environment check - validate required Intuit credentials
     console.log('Environment check: Validating Intuit credentials');
-    const intuitClientId = Deno.env.get('INTUIT_CLIENT_ID');
-    if (!intuitClientId) {
+    const INTUIT_CLIENT_ID = Deno.env.get('INTUIT_CLIENT_ID');
+    const INTUIT_CLIENT_SECRET = Deno.env.get('INTUIT_CLIENT_SECRET');
+    
+    if (!INTUIT_CLIENT_ID) {
       console.error('Environment check failed: INTUIT_CLIENT_ID is missing');
       return new Response(
         JSON.stringify({ 
@@ -30,7 +32,19 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    console.log('Environment check passed: INTUIT_CLIENT_ID is configured');
+    
+    if (!INTUIT_CLIENT_SECRET) {
+      console.error('Environment check failed: INTUIT_CLIENT_SECRET is missing');
+      return new Response(
+        JSON.stringify({ 
+          error: 'QuickBooks integration not configured: INTUIT_CLIENT_SECRET environment variable is missing. Please configure Intuit app credentials in Edge Function secrets.',
+          needsSetup: true 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('Environment check passed: Both INTUIT_CLIENT_ID and INTUIT_CLIENT_SECRET are configured');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -96,7 +110,7 @@ serve(async (req) => {
     const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/quickbooks-callback`;
     
     const params = new URLSearchParams({
-      client_id: intuitClientId,
+      client_id: INTUIT_CLIENT_ID,
       scope: 'com.intuit.quickbooks.accounting',
       redirect_uri: redirectUri,
       response_type: 'code',
