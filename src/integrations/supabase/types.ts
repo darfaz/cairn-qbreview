@@ -76,6 +76,59 @@ export type Database = {
           },
         ]
       }
+      firm_integrations: {
+        Row: {
+          configured_at: string | null
+          configured_by: string | null
+          created_at: string | null
+          firm_id: string | null
+          id: string
+          intuit_app_name: string | null
+          intuit_client_id: string | null
+          intuit_client_secret_encrypted: string | null
+          intuit_environment: string | null
+          is_configured: boolean | null
+          redirect_uri: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          configured_at?: string | null
+          configured_by?: string | null
+          created_at?: string | null
+          firm_id?: string | null
+          id?: string
+          intuit_app_name?: string | null
+          intuit_client_id?: string | null
+          intuit_client_secret_encrypted?: string | null
+          intuit_environment?: string | null
+          is_configured?: boolean | null
+          redirect_uri?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          configured_at?: string | null
+          configured_by?: string | null
+          created_at?: string | null
+          firm_id?: string | null
+          id?: string
+          intuit_app_name?: string | null
+          intuit_client_id?: string | null
+          intuit_client_secret_encrypted?: string | null
+          intuit_environment?: string | null
+          is_configured?: boolean | null
+          redirect_uri?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firm_integrations_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: true
+            referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firms: {
         Row: {
           address: string | null
@@ -182,11 +235,7 @@ export type Database = {
           firm_id: string | null
           first_name: string | null
           id: string
-          intuit_client_id: string | null
-          intuit_client_secret: string | null
           last_name: string | null
-          oauth_redirect_uri: string | null
-          qboa_oauth_enabled: boolean
           role: string | null
           updated_at: string
         }
@@ -196,11 +245,7 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id: string
-          intuit_client_id?: string | null
-          intuit_client_secret?: string | null
           last_name?: string | null
-          oauth_redirect_uri?: string | null
-          qboa_oauth_enabled?: boolean
           role?: string | null
           updated_at?: string
         }
@@ -210,11 +255,7 @@ export type Database = {
           firm_id?: string | null
           first_name?: string | null
           id?: string
-          intuit_client_id?: string | null
-          intuit_client_secret?: string | null
           last_name?: string | null
-          oauth_redirect_uri?: string | null
-          qboa_oauth_enabled?: boolean
           role?: string | null
           updated_at?: string
         }
@@ -224,6 +265,53 @@ export type Database = {
             columns: ["firm_id"]
             isOneToOne: false
             referencedRelation: "firms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_clients: {
+        Row: {
+          client_name: string
+          created_at: string | null
+          firm_id: string | null
+          id: string
+          is_active: boolean | null
+          last_review_date: string | null
+          last_review_status: string | null
+          realm_id: string
+          sheet_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_name: string
+          created_at?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_review_date?: string | null
+          last_review_status?: string | null
+          realm_id: string
+          sheet_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_name?: string
+          created_at?: string | null
+          firm_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_review_date?: string | null
+          last_review_status?: string | null
+          realm_id?: string
+          sheet_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_clients_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "qbo_firms"
             referencedColumns: ["id"]
           },
         ]
@@ -286,6 +374,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qbo_firms: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      qbo_oauth_states: {
+        Row: {
+          created_at: string | null
+          environment: string | null
+          expires_at: string
+          id: string
+          state: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          environment?: string | null
+          expires_at: string
+          id?: string
+          state: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          environment?: string | null
+          expires_at?: string
+          id?: string
+          state?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       qbo_sync_queue: {
         Row: {
@@ -396,6 +532,44 @@ export type Database = {
           },
         ]
       }
+      review_history: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          review_date: string | null
+          sheet_url: string | null
+          status: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          review_date?: string | null
+          sheet_url?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          review_date?: string | null
+          sheet_url?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "qbo_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_runs: {
         Row: {
           created_at: string
@@ -489,6 +663,10 @@ export type Database = {
       }
     }
     Functions: {
+      cleanup_expired_oauth_states: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       encrypt_token: {
         Args: { _key: string; _token: string }
         Returns: string
