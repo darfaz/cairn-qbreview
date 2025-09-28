@@ -96,7 +96,8 @@ export default function ClientsPage() {
       const result = await triggerQBReview({
         action: 'runReview',
         realmId: client.realm_id,
-        clientName: client.client_name
+        clientName: client.client_name,
+        clientId: client.id
       });
 
       if (result.success) {
