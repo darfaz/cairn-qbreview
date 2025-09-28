@@ -1,4 +1,4 @@
-import { Search, Settings, UserCircle, Bell, LogOut } from 'lucide-react';
+import { Search, Settings, UserCircle, Bell, LogOut, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -62,6 +62,10 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
               className="pl-10 w-80"
             />
           </div>
+          
+          <Button variant="ghost" size="sm" onClick={() => navigate('/clients')} title="Clients">
+            <Users className="w-4 h-4" />
+          </Button>
           
           <Button variant="ghost" size="sm">
             <Bell className="w-4 h-4" />

@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import CompanySelection from "./pages/CompanySelection";
 import CompanyManagement from "./pages/CompanyManagement";
+import Clients from "./pages/Clients";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -37,6 +38,11 @@ const App = () => {
               <Route path="/company-selection" element={
                 <ProtectedRoute>
                   <CompanySelection />
+                </ProtectedRoute>
+              } />
+              <Route path="/clients" element={
+                <ProtectedRoute>
+                  <Clients />
                 </ProtectedRoute>
               } />
               <Route path="/settings/companies" element={
