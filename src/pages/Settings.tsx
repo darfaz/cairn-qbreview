@@ -239,21 +239,21 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          {/* QuickBooks Configuration */}
+          {/* Webhook Integration Status */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Key className="h-5 w-5" />
-                QuickBooks Configuration
+                Integration Status
               </CardTitle>
               <CardDescription>
-                Integration with QuickBooks Online
+                Webhook Integration with QuickBooks Online
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="p-4 bg-muted rounded-lg text-center">
                 <p className="text-sm text-muted-foreground">
-                  QuickBooks configuration is managed by your administrator
+                  Webhook Integration Pending - OAuth functionality has been removed
                 </p>
               </div>
             </CardContent>

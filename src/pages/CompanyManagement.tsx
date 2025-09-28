@@ -103,37 +103,7 @@ const CompanyManagement = () => {
   };
 
   const handleReconnect = async (companyId: string, realmId: string) => {
-    try {
-      // Get OAuth settings
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('intuit_client_id, oauth_redirect_uri')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!profile?.intuit_client_id) {
-        toast.error('Please configure OAuth settings first');
-        return;
-      }
-
-      // Build OAuth URL with specific realmId
-      const params = new URLSearchParams({
-        client_id: profile.intuit_client_id,
-        scope: 'com.intuit.quickbooks.accounting',
-        redirect_uri: profile.oauth_redirect_uri || `${window.location.origin}/settings/companies`,
-        response_type: 'code',
-        access_type: 'offline',
-        approval_prompt: 'auto',
-        realmId: realmId
-      });
-
-      const oauthUrl = `https://appcenter.intuit.com/connect/oauth2?${params}`;
-      window.location.href = oauthUrl;
-      
-    } catch (error) {
-      console.error('Reconnection error:', error);
-      toast.error('Failed to start reconnection process');
-    }
+    toast.error('Webhook Integration Pending - OAuth functionality has been removed');
   };
 
   const handleRefreshAll = async () => {
@@ -151,8 +121,7 @@ const CompanyManagement = () => {
   };
 
   const handleDiscoverNew = () => {
-    // Redirect to company selection flow
-    window.location.href = '/company-selection';
+    toast.error('Webhook Integration Pending - OAuth functionality has been removed');
   };
 
   if (isLoading) {

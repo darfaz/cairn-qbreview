@@ -13,13 +13,10 @@ interface DebugPanelProps {
 
 export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
   const [debugInfo, setDebugInfo] = useState({
-    environment: 'Unknown',
-    lastOAuthAttempt: null as Date | null,
-    lastOAuthResult: 'None',
+    environment: 'Webhook Integration',
     connectionsCount: 0,
     supabaseUrl: '',
-    redirectUri: '',
-    clientIdConfigured: false
+    webhookUrl: ''
   });
 
   useEffect(() => {
@@ -30,38 +27,17 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
 
   const loadDebugInfo = async () => {
     try {
-      // Get current user profile
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('intuit_client_id, oauth_redirect_uri')
-        .eq('id', user.id)
-        .single();
-
-      // Count QBO connections  
+      // Count client connections  
       const { count } = await supabase
-        .from('qbo_connections')
-        .select('*', { count: 'exact' });
-
-      // Get recent OAuth attempts from logs
-      const { data: logs } = await supabase
-        .from('notification_logs')
-        .select('created_at, message, status')
-        .eq('notification_type', 'audit')
-        .like('subject', '%OAuth%')
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .from('clients')
+        .select('*', { count: 'exact' })
+        .eq('is_active', true);
 
       setDebugInfo({
-        environment: profile?.intuit_client_id?.includes('sandbox') ? 'sandbox' : 'production',
-        lastOAuthAttempt: logs?.[0]?.created_at ? new Date(logs[0].created_at) : null,
-        lastOAuthResult: logs?.[0]?.status || 'None',
+        environment: 'Webhook Integration',
         connectionsCount: count || 0,
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'Not configured',
-        redirectUri: profile?.oauth_redirect_uri || 'Using default',
-        clientIdConfigured: !!profile?.intuit_client_id
+        webhookUrl: import.meta.env.VITE_N8N_WEBHOOK_URL || 'Not configured'
       });
     } catch (error) {
       console.error('Failed to load debug info:', error);
@@ -70,13 +46,11 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
   };
 
   const testCallback = () => {
-    const callbackUrl = `${debugInfo.supabaseUrl}/functions/v1/quickbooks-callback`;
-    console.log('Expected callback URL:', callbackUrl);
-    console.log('Current environment:', debugInfo.environment);
-    console.log('Client ID configured:', debugInfo.clientIdConfigured);
-    console.log('Redirect URI:', debugInfo.redirectUri);
+    console.log('Webhook URL:', debugInfo.webhookUrl);
+    console.log('Environment:', debugInfo.environment);
+    console.log('Active connections:', debugInfo.connectionsCount);
     
-    toast.success('Debug info logged to console');
+    toast.success('Debug info logged to console - OAuth functionality removed');
   };
 
   if (!isVisible) {
@@ -102,24 +76,18 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h4 className="text-sm font-semibold mb-2">QuickBooks Configuration</h4>
+          <h4 className="text-sm font-semibold mb-2">Integration Status</h4>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
-              <span>Environment:</span>
-              <Badge variant={debugInfo.environment === 'sandbox' ? 'secondary' : 'default'}>
-                {debugInfo.environment}
-              </Badge>
-            </div>
-            <div className="flex justify-between">
-              <span>Client ID:</span>
-              <Badge variant={debugInfo.clientIdConfigured ? 'default' : 'destructive'}>
-                {debugInfo.clientIdConfigured ? 'Configured' : 'Missing'}
+              <span>Integration:</span>
+              <Badge variant="secondary">
+                Webhook Pending
               </Badge>
             </div>
             <div className="flex justify-between items-start">
-              <span>Redirect URI:</span>
+              <span>Webhook URL:</span>
               <span className="text-right text-xs text-muted-foreground max-w-48 break-all">
-                {debugInfo.redirectUri}
+                {debugInfo.webhookUrl}
               </span>
             </div>
           </div>
@@ -128,25 +96,19 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
         <Separator />
 
         <div>
-          <h4 className="text-sm font-semibold mb-2">OAuth State</h4>
+          <h4 className="text-sm font-semibold mb-2">Connection State</h4>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
-              <span>Active Connections:</span>
+              <span>Active Clients:</span>
               <Badge variant={debugInfo.connectionsCount > 0 ? 'default' : 'secondary'}>
                 {debugInfo.connectionsCount}
               </Badge>
             </div>
             <div className="flex justify-between items-start">
-              <span>Last Attempt:</span>
+              <span>Status:</span>
               <span className="text-right text-xs text-muted-foreground">
-                {debugInfo.lastOAuthAttempt?.toLocaleString() || 'None'}
+                OAuth Removed
               </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Last Result:</span>
-              <Badge variant={debugInfo.lastOAuthResult === 'delivered' ? 'default' : 'secondary'}>
-                {debugInfo.lastOAuthResult}
-              </Badge>
             </div>
           </div>
         </div>
@@ -163,13 +125,9 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
         </div>
 
         <div className="text-xs text-muted-foreground">
-          <p className="font-medium mb-1">Expected Callback URL:</p>
+          <p className="font-medium mb-1">Webhook Integration:</p>
           <p className="break-all bg-muted p-2 rounded">
-            {debugInfo.supabaseUrl}/functions/v1/quickbooks-callback
-          </p>
-          <p className="mt-2 font-medium">Configure in Intuit Developer:</p>
-          <p className="break-all bg-muted p-2 rounded">
-            Redirect URIs → {debugInfo.supabaseUrl}/functions/v1/quickbooks-callback
+            OAuth functionality has been removed. Integration pending via webhook.
           </p>
         </div>
       </CardContent>

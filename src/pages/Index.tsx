@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ClientGrid } from '@/components/dashboard/ClientGrid';
-import { QBConnectButton } from '@/components/quickbooks/QBConnectButton';
+
 import { DebugPanel } from '@/components/dashboard/DebugPanel';
 import { generateMockClients, mockSummary } from '@/data/mockClients';
 import { useToast } from '@/hooks/use-toast';
@@ -82,8 +82,8 @@ const Index = () => {
   const handleReconnect = (clientId: string) => {
     const client = allClients.find(c => c.id === clientId);
     toast({
-      title: 'Reconnection Required',
-      description: `Please reconnect QuickBooks for ${client?.name}`,
+      title: 'Webhook Integration Pending',
+      description: `Webhook integration is pending for ${client?.name}`,
     });
   };
 
@@ -106,7 +106,12 @@ const Index = () => {
         />
         
         <main className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <QBConnectButton onConnectionSuccess={checkForClients} />
+          <div className="text-center space-y-4 p-8">
+            <h2 className="text-2xl font-semibold">Webhook Integration Pending</h2>
+            <p className="text-muted-foreground max-w-md">
+              QuickBooks integration will be available via webhook. OAuth functionality has been removed.
+            </p>
+          </div>
         </main>
       </div>
     );
