@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ClientGrid } from '@/components/dashboard/ClientGrid';
@@ -7,9 +8,12 @@ import { generateMockClients, mockSummary } from '@/data/mockClients';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileSpreadsheet, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FileSpreadsheet, CheckCircle, Clock, AlertCircle, Building2 } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [hasClients, setHasClients] = useState<boolean | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
@@ -21,7 +25,6 @@ const Index = () => {
     failedReviews: 0
   });
   const [recentReviews, setRecentReviews] = useState<any[]>([]);
-  const { toast } = useToast();
   
   const allClients = useMemo(() => generateMockClients(105), []);
 
@@ -154,7 +157,7 @@ const Index = () => {
     );
   }
 
-  // Show connect button if no clients exist
+  // Show getting started message if no clients exist
   if (!hasClients) {
     return (
       <div className="min-h-screen bg-background">
@@ -164,11 +167,17 @@ const Index = () => {
         />
         
         <main className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <div className="text-center space-y-4 p-8">
-            <h2 className="text-2xl font-semibold">Webhook Integration Pending</h2>
-            <p className="text-muted-foreground max-w-md">
-              QuickBooks integration will be available via webhook. OAuth functionality has been removed.
+          <div className="text-center space-y-6 p-8 max-w-md">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <Building2 className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-semibold">Welcome to Cairn Accounting</h2>
+            <p className="text-muted-foreground">
+              Get started by adding your first QuickBooks client to begin automated reconciliation reviews.
             </p>
+            <Button onClick={() => navigate('/clients')} size="lg">
+              Add Your First Client
+            </Button>
           </div>
         </main>
       </div>
