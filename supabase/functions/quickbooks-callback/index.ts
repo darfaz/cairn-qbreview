@@ -36,12 +36,11 @@ serve(async (req) => {
     // Handle OAuth errors
     if (error) {
       console.error('OAuth error received:', error, errorDescription);
-      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || '')}`;
       
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': frontendUrl,
+          'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
           ...corsHeaders
         }
       });
@@ -50,12 +49,11 @@ serve(async (req) => {
     // Validate required parameters
     if (!code || !state || !realmId) {
       console.error('Missing required OAuth parameters:', { code: !!code, state: !!state, realmId: !!realmId });
-      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=invalid_request&error_description=Missing required parameters`;
       
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': frontendUrl,
+          'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
           ...corsHeaders
         }
       });
@@ -82,12 +80,10 @@ serve(async (req) => {
         .limit(5);
       console.log('Recent stored states:', allStates);
       
-      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=invalid_state&error_description=Invalid security token`;
-      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': frontendUrl,
+          'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
           ...corsHeaders
         }
       });
@@ -108,12 +104,10 @@ serve(async (req) => {
 
     if (!INTUIT_CLIENT_ID || !INTUIT_CLIENT_SECRET) {
       console.error('Missing Intuit credentials in environment');
-      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=configuration_error&error_description=Missing OAuth configuration`;
-      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': frontendUrl,
+          'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
           ...corsHeaders
         }
       });
@@ -150,12 +144,10 @@ serve(async (req) => {
       console.error('Token exchange failed - Request body:', tokenParams.toString());
       console.error('Token exchange failed - Authorization header (client_id):', INTUIT_CLIENT_ID);
       
-      const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=token_exchange_failed&error_description=Failed to exchange authorization code`;
-      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': frontendUrl,
+          'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
           ...corsHeaders
         }
       });
@@ -194,12 +186,10 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Failed to update connection:', updateError);
-        const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=storage_failed&error_description=Failed to update connection`;
-        
         return new Response(null, {
           status: 302,
           headers: {
-            'Location': frontendUrl,
+            'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
             ...corsHeaders
           }
         });
@@ -222,12 +212,10 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Failed to create connection:', insertError);
-        const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=storage_failed&error_description=Failed to store connection`;
-        
         return new Response(null, {
           status: 302,
           headers: {
-            'Location': frontendUrl,
+            'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
             ...corsHeaders
           }
         });
@@ -240,12 +228,10 @@ serve(async (req) => {
     console.log(`OAuth successful for realmId: ${realmId}, userId: ${userId}, environment: ${environment}`);
 
     // Redirect to dashboard with success
-    const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?success=true&realmId=${realmId}`;
-    
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': frontendUrl,
+        'Location': 'https://cairn-qbreview.lovable.app/dashboard',
         ...corsHeaders
       }
     });
@@ -253,12 +239,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Callback endpoint error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const frontendUrl = `https://cairn-qbreview.lovable.app/dashboard?error=internal_error&error_description=${encodeURIComponent(errorMessage)}`;
-    
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': frontendUrl,
+        'Location': 'https://cairn-qbreview.lovable.app/dashboard?error=oauth_failed',
         ...corsHeaders
       }
     });
