@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.run-review]
 verify_jwt = false
 
+[functions.run-batch-review]
+verify_jwt = false
+
 [functions.quickbooks-token-refresh]
 verify_jwt = false
 
