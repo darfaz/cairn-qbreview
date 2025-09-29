@@ -14,55 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      bulk_upload_history: {
+        Row: {
+          created_at: string | null
+          error_details: Json | null
+          failed_rows: number
+          file_name: string
+          firm_id: string
+          id: string
+          successful_rows: number
+          total_rows: number
+          updated_at: string | null
+          uploaded_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: Json | null
+          failed_rows?: number
+          file_name: string
+          firm_id: string
+          id?: string
+          successful_rows?: number
+          total_rows?: number
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: Json | null
+          failed_rows?: number
+          file_name?: string
+          firm_id?: string
+          id?: string
+          successful_rows?: number
+          total_rows?: number
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           action_items_count: number | null
+          client_name: string
           connection_status: string | null
           created_at: string
+          created_by: string | null
           dropbox_folder_url: string | null
           firm_id: string | null
           id: string
           is_active: boolean
           is_sandbox: boolean
+          last_error: string | null
+          last_review_at: string | null
           last_review_date: string | null
           last_sync_at: string | null
           name: string
           qbo_company_name: string | null
           realm_id: string
+          review_status: string | null
+          sheet_url: string | null
           status: string | null
           updated_at: string
         }
         Insert: {
           action_items_count?: number | null
+          client_name: string
           connection_status?: string | null
           created_at?: string
+          created_by?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
           is_active?: boolean
           is_sandbox?: boolean
+          last_error?: string | null
+          last_review_at?: string | null
           last_review_date?: string | null
           last_sync_at?: string | null
           name: string
           qbo_company_name?: string | null
           realm_id: string
+          review_status?: string | null
+          sheet_url?: string | null
           status?: string | null
           updated_at?: string
         }
         Update: {
           action_items_count?: number | null
+          client_name?: string
           connection_status?: string | null
           created_at?: string
+          created_by?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
           is_active?: boolean
           is_sandbox?: boolean
+          last_error?: string | null
+          last_review_at?: string | null
           last_review_date?: string | null
           last_sync_at?: string | null
           name?: string
           qbo_company_name?: string | null
           realm_id?: string
+          review_status?: string | null
+          sheet_url?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -566,6 +626,63 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "qbo_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_runs: {
+        Row: {
+          action_items_count: number | null
+          client_id: string
+          completed_at: string | null
+          created_by: string | null
+          error_message: string | null
+          firm_id: string
+          id: string
+          metadata: Json | null
+          sheet_url: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          action_items_count?: number | null
+          client_id: string
+          completed_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          firm_id: string
+          id?: string
+          metadata?: Json | null
+          sheet_url?: string | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          action_items_count?: number | null
+          client_id?: string
+          completed_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          firm_id?: string
+          id?: string
+          metadata?: Json | null
+          sheet_url?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_runs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_runs_firm_id_fkey"
+            columns: ["firm_id"]
+            isOneToOne: false
+            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
         ]
