@@ -102,7 +102,7 @@ export function ClientGrid({
       <BulkReconciliationControls
         selectedClientIds={selectedClientIds}
         onSelectionChange={onSelectionChange}
-        totalClients={connectedClients.length}
+        totalClients={clients.length}
       />
 
       <div className="dashboard-card">
