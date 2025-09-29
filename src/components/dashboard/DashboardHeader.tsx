@@ -63,7 +63,7 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
             />
           </div>
           
-          <Button variant="ghost" size="sm" onClick={() => navigate('/clients')} title="Clients">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/client-management')} title="Client Management">
             <Users className="w-4 h-4" />
           </Button>
           

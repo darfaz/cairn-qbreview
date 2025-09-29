@@ -14,11 +14,55 @@ export type Database = {
   }
   public: {
     Tables: {
+      bulk_upload_history: {
+        Row: {
+          created_at: string | null
+          error_details: Json | null
+          failed_rows: number
+          file_name: string
+          firm_id: string
+          id: string
+          successful_rows: number
+          total_rows: number
+          updated_at: string | null
+          uploaded_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: Json | null
+          failed_rows?: number
+          file_name: string
+          firm_id: string
+          id?: string
+          successful_rows?: number
+          total_rows?: number
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: Json | null
+          failed_rows?: number
+          file_name?: string
+          firm_id?: string
+          id?: string
+          successful_rows?: number
+          total_rows?: number
+          updated_at?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           action_items_count: number | null
+          client_name: string
           connection_status: string | null
           created_at: string
+          created_by: string | null
           dropbox_folder_url: string | null
           firm_id: string | null
           id: string
@@ -34,8 +78,10 @@ export type Database = {
         }
         Insert: {
           action_items_count?: number | null
+          client_name: string
           connection_status?: string | null
           created_at?: string
+          created_by?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
@@ -51,8 +97,10 @@ export type Database = {
         }
         Update: {
           action_items_count?: number | null
+          client_name?: string
           connection_status?: string | null
           created_at?: string
+          created_by?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
