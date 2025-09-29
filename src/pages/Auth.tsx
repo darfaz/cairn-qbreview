@@ -81,7 +81,7 @@ const Auth = () => {
           title: 'Welcome back!',
           description: 'You have successfully signed in.',
         });
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error) {
       toast({

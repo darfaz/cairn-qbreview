@@ -175,7 +175,7 @@ const Index = () => {
             <p className="text-muted-foreground">
               Get started by adding your first QuickBooks client to begin automated reconciliation reviews.
             </p>
-            <Button onClick={() => navigate('/clients')} size="lg">
+            <Button onClick={() => navigate('/dashboard')} size="lg">
               Add Your First Client
             </Button>
           </div>

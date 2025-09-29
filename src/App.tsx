@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
+import PublicLanding from "./pages/PublicLanding";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import CompanySelection from "./pages/CompanySelection";
@@ -24,8 +25,9 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Routes>
+              <Route path="/" element={<PublicLanding />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Index />
                 </ProtectedRoute>
