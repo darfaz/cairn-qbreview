@@ -1,0 +1,23 @@
+-- Drop the unused qbo_connections_safe view to fix SECURITY DEFINER security issue
+-- This view is not used in the codebase and poses a security risk by bypassing RLS policies
+DROP VIEW IF EXISTS qbo_connections_safe;
+
+-- If this view is needed in the future, it should be recreated with SECURITY INVOKER
+-- and proper RLS policies like this:
+-- CREATE VIEW qbo_connections_safe WITH (security_invoker = true) AS
+-- SELECT 
+--   id,
+--   client_id,
+--   connection_status,
+--   expires_at,
+--   token_expires_at,
+--   refresh_token_updated_at,
+--   connection_method,
+--   accountant_access,
+--   scope,
+--   realm_id,
+--   created_at,
+--   updated_at,
+--   CASE WHEN length(access_token) > 0 THEN 'ENCRYPTED' ELSE 'MISSING' END AS token_status,
+--   CASE WHEN length(refresh_token) > 0 THEN 'ENCRYPTED' ELSE 'MISSING' END AS refresh_token_status
+-- FROM qbo_connections;
