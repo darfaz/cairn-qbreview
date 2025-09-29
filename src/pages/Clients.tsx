@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { triggerQBReview } from '@/lib/services/n8n-webhook';
+import { runReview as runSingleReview, runBatchReview as runBatch } from '@/lib/reviews';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ export default function ClientsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newClient, setNewClient] = useState({ client_name: '', realm_id: '' });
   const [isLoadingClients, setIsLoadingClients] = useState(true);
+  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -82,74 +83,18 @@ export default function ClientsPage() {
     setLoading(prev => ({ ...prev, [client.id]: true }));
     
     try {
-      // Record the review attempt
-      const { data: review } = await supabase
-        .from('review_history')
-        .insert({
-          client_id: client.id,
-          status: 'processing'
-        })
-        .select()
-        .single();
-
-      // Trigger n8n webhook
-      const result = await triggerQBReview({
-        action: 'runReview',
-        realmId: client.realm_id,
-        clientName: client.client_name,
-        clientId: client.id
+      await runSingleReview({
+        id: client.id,
+        client_name: client.client_name,
+        realm_id: client.realm_id,
+        sheet_url: client.sheet_url || undefined,
       });
-
-      if (result.success) {
-        // Update review status
-        if (review?.id) {
-          await supabase
-            .from('review_history')
-            .update({
-              status: 'completed',
-              sheet_url: result.sheetUrl
-            })
-            .eq('id', review.id);
-        }
-
-        // Update client's last review
-        await supabase
-          .from('qbo_clients')
-          .update({
-            last_review_date: new Date().toISOString(),
-            last_review_status: 'completed',
-            sheet_url: result.sheetUrl
-          })
-          .eq('id', client.id);
-
-        toast.success(`Review completed for ${client.client_name}`);
-        fetchClients();
-      } else {
-        throw new Error(result.error || 'Review failed');
-      }
-    } catch (error) {
-      toast.error(`Review failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      console.error('Review failed:', error);
       
-      // Update review status as failed
-      const { data: review } = await supabase
-        .from('review_history')
-        .select('id')
-        .eq('client_id', client.id)
-        .eq('status', 'processing')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (review?.id) {
-        await supabase
-          .from('review_history')
-          .update({
-            status: 'failed',
-            error_message: error instanceof Error ? error.message : 'Unknown error'
-          })
-          .eq('id', review.id);
-      }
+      // Refresh clients list after successful review
+      await fetchClients();
+    } catch (error) {
+      console.error('Review failed:', error);
+      // Error handling is done in the review utility
     } finally {
       setLoading(prev => ({ ...prev, [client.id]: false }));
     }
@@ -160,26 +105,18 @@ export default function ClientsPage() {
       return;
     }
 
-    toast.info('Starting batch review...');
+    setIsLoadingBatch(true);
     
-    const clientData = clients.map(c => ({
-      realmId: c.realm_id,
-      clientName: c.client_name
-    }));
-
     try {
-      const result = await triggerQBReview({
-        action: 'runBatch',
-        clients: clientData
-      });
-
-      if (result.success) {
-        toast.success('Batch review started successfully');
-      } else {
-        throw new Error(result.error || 'Batch review failed');
-      }
+      await runBatch({ runAll: true });
+      
+      // Refresh clients list after batch review
+      await fetchClients();
     } catch (error) {
-      toast.error(`Batch review failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Batch review failed:', error);
+      // Error handling is done in the review utility
+    } finally {
+      setIsLoadingBatch(false);
     }
   };
 
@@ -217,9 +154,16 @@ export default function ClientsPage() {
             </Button>
             <Button
               onClick={runBatchReview}
-              disabled={clients.length === 0}
+              disabled={clients.length === 0 || isLoadingBatch}
             >
-              Run All Reviews
+              {isLoadingBatch ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                'Run All Reviews'
+              )}
             </Button>
           </div>
         </div>
