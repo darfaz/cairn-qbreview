@@ -19,11 +19,11 @@ interface QBOClient {
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<QBOClient[]>([]);
-  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [runningClients, setRunningClients] = useState<Set<string>>(new Set());
+  const [isBatchRunning, setIsBatchRunning] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newClient, setNewClient] = useState({ client_name: '', realm_id: '' });
   const [isLoadingClients, setIsLoadingClients] = useState(true);
-  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -80,7 +80,13 @@ export default function ClientsPage() {
   };
 
   const runReview = async (client: QBOClient) => {
-    setLoading(prev => ({ ...prev, [client.id]: true }));
+    // Prevent if already running
+    if (runningClients.has(client.id) || isBatchRunning) {
+      toast.error('Review already in progress');
+      return;
+    }
+
+    setRunningClients(prev => new Set(prev).add(client.id));
     
     try {
       await runSingleReview({
@@ -96,16 +102,26 @@ export default function ClientsPage() {
       console.error('Review failed:', error);
       // Error handling is done in the review utility
     } finally {
-      setLoading(prev => ({ ...prev, [client.id]: false }));
+      setRunningClients(prev => {
+        const next = new Set(prev);
+        next.delete(client.id);
+        return next;
+      });
     }
   };
 
   const runBatchReview = async () => {
+    // Prevent if any individual reviews running
+    if (runningClients.size > 0 || isBatchRunning) {
+      toast.error('Wait for individual reviews to complete first');
+      return;
+    }
+
     if (!confirm(`Run review for all ${clients.length} clients? This may take some time.`)) {
       return;
     }
 
-    setIsLoadingBatch(true);
+    setIsBatchRunning(true);
     
     try {
       await runBatch({ runAll: true });
@@ -116,7 +132,7 @@ export default function ClientsPage() {
       console.error('Batch review failed:', error);
       // Error handling is done in the review utility
     } finally {
-      setIsLoadingBatch(false);
+      setIsBatchRunning(false);
     }
   };
 
@@ -154,9 +170,9 @@ export default function ClientsPage() {
             </Button>
             <Button
               onClick={runBatchReview}
-              disabled={clients.length === 0 || isLoadingBatch}
+              disabled={clients.length === 0 || isBatchRunning || runningClients.size > 0}
             >
-              {isLoadingBatch ? (
+              {isBatchRunning ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Running...
@@ -240,11 +256,11 @@ export default function ClientsPage() {
                     <div className="flex gap-2">
                       <Button
                         onClick={() => runReview(client)}
-                        disabled={loading[client.id]}
+                        disabled={runningClients.has(client.id) || isBatchRunning}
                         size="sm"
                         className="flex-1"
                       >
-                        {loading[client.id] ? (
+                        {runningClients.has(client.id) ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <>
