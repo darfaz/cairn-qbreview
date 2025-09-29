@@ -185,9 +185,20 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-6 py-4">
-          <h1 className="text-2xl font-semibold">QuickBooks Clients</h1>
+      <header className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">C</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
+              <p className="text-sm text-muted-foreground">QuickBooks Reconciliation Dashboard</p>
+            </div>
+          </button>
         </div>
       </header>
 

@@ -40,7 +40,10 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+          >
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">C</span>
             </div>
@@ -48,7 +51,7 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
               <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
               <p className="text-sm text-muted-foreground">QuickBooks Reconciliation Dashboard</p>
             </div>
-          </div>
+          </button>
         </div>
 
         <div className="flex items-center space-x-4">
