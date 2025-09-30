@@ -170,7 +170,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex flex-col">
-                      <span className="font-medium text-foreground">{client.client_name}</span>
+                      <span className="font-medium text-foreground">{client.client_name || client.name}</span>
                       <span className="text-sm text-muted-foreground">ID: {client.realm_id}</span>
                     </div>
                   </td>
