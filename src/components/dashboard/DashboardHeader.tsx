@@ -32,7 +32,7 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
         variant: 'destructive',
       });
     } else {
-      navigate('/auth');
+      navigate('/landing');
     }
   };
 
