@@ -14,7 +14,6 @@ interface QBOClient {
   last_review_date: string | null;
   last_review_status: string | null;
   sheet_url: string | null;
-  is_active: boolean;
 }
 
 export default function ClientsPage() {
@@ -32,16 +31,40 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     setIsLoadingClients(true);
     const { data, error } = await supabase
-      .from('qbo_clients')
-      .select('*')
-      .eq('is_active', true)
+      .from('clients')
+      .select(`
+        id,
+        client_name,
+        realm_id,
+        reviews (
+          triggered_at,
+          status,
+          sheet_url
+        )
+      `)
       .order('client_name');
     
     if (error) {
       toast.error('Failed to load clients');
       console.error(error);
     } else {
-      setClients(data || []);
+      // Map the data to include the latest review info
+      const mappedClients: QBOClient[] = data?.map(client => {
+        const latestReview = Array.isArray(client.reviews) && client.reviews.length > 0 
+          ? client.reviews[0] 
+          : null;
+        
+        return {
+          id: client.id,
+          client_name: client.client_name,
+          realm_id: client.realm_id,
+          last_review_date: latestReview?.triggered_at || null,
+          last_review_status: latestReview?.status || null,
+          sheet_url: latestReview?.sheet_url || null,
+        };
+      }) || [];
+      
+      setClients(mappedClients);
     }
     setIsLoadingClients(false);
   };
@@ -49,21 +72,28 @@ export default function ClientsPage() {
   const addClient = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Get the first firm ID (we're using single firm for now)
-    const { data: firms } = await supabase
-      .from('qbo_firms')
-      .select('id')
-      .limit(1);
+    // Get the user's firm ID from their profile
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('You must be logged in');
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('firm_id')
+      .eq('id', user.id)
+      .single();
     
-    const firmId = firms?.[0]?.id;
+    const firmId = profile?.firm_id;
     
     if (!firmId) {
-      toast.error('No firm found. Please set up a firm first.');
+      toast.error('No firm found. Please contact support.');
       return;
     }
 
     const { error } = await supabase
-      .from('qbo_clients')
+      .from('clients')
       .insert({
         ...newClient,
         firm_id: firmId

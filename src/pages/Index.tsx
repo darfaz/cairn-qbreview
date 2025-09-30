@@ -37,15 +37,12 @@ const Index = () => {
         .from('clients')
         .select(`
           id,
-          name,
           client_name,
           realm_id,
-          connection_status,
           dropbox_folder_url,
-          is_active
+          qbo_connections(connection_status)
         `)
-        .eq('is_active', true)
-        .order('name');
+        .order('client_name');
 
       if (error) throw error;
 
@@ -58,28 +55,29 @@ const Index = () => {
       // Fetch all reviews for these clients
       const clientIds = data.map(c => c.id);
       const reviewsResponse = await supabase
-        .from('reviews' as any)
-        .select('id, client_id, action_items_count, run_date, sheet_url, status')
+        .from('reviews')
+        .select('id, client_id, action_items_count, triggered_at, sheet_url, status')
         .in('client_id', clientIds)
-        .order('run_date', { ascending: false });
+        .order('triggered_at', { ascending: false });
       
-      const allReviews = reviewsResponse.data as any[];
+      const allReviews = reviewsResponse.data || [];
 
       // Match each client with their latest review
       const clientsWithReviews: ClientWithReview[] = data.map((client) => {
-        const clientReviews = (allReviews as any[])?.filter((r: any) => r.client_id === client.id) || [];
+        const clientReviews = allReviews.filter((r) => r.client_id === client.id) || [];
         const latestReview = clientReviews.length > 0 ? clientReviews[0] : null;
+        const qboConnection = Array.isArray(client.qbo_connections) ? client.qbo_connections[0] : client.qbo_connections;
 
         return {
           id: client.id,
-          name: client.name,
+          name: client.client_name,
           client_name: client.client_name,
           realm_id: client.realm_id,
-          connection_status: client.connection_status,
+          connection_status: qboConnection?.connection_status || null,
           dropbox_folder_url: client.dropbox_folder_url,
           latest_review: latestReview ? {
             action_items_count: latestReview.action_items_count || 0,
-            run_date: latestReview.run_date || '',
+            run_date: latestReview.triggered_at || '',
             sheet_url: latestReview.sheet_url || null,
             status: latestReview.status || 'unknown',
           } : null,

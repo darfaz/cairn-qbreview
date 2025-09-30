@@ -8,7 +8,7 @@ export async function addQBOClient(clientData: {
   try {
     // First, check if the realm_id already exists
     const { data: existingClient, error: checkError } = await supabase
-      .from('qbo_clients')
+      .from('clients')
       .select('*')
       .eq('realm_id', clientData.realm_id)
       .single();
@@ -20,7 +20,7 @@ export async function addQBOClient(clientData: {
     if (existingClient) {
       // Update existing client instead of inserting
       const { data, error } = await supabase
-        .from('qbo_clients')
+        .from('clients')
         .update({
           client_name: clientData.client_name,
           updated_at: new Date().toISOString(),
@@ -40,7 +40,7 @@ export async function addQBOClient(clientData: {
     } else {
       // Insert new client
       const { data, error } = await supabase
-        .from('qbo_clients')
+        .from('clients')
         .insert({
           realm_id: clientData.realm_id,
           client_name: clientData.client_name,

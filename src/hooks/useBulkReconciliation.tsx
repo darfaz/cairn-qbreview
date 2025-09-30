@@ -102,13 +102,19 @@ export function useBulkReconciliation() {
       // Get all connected clients
       const { data: clients, error } = await supabase
         .from('clients')
-        .select('id')
-        .eq('is_active', true)
-        .eq('connection_status', 'connected');
+        .select(`
+          id,
+          qbo_connections!inner(connection_status)
+        `);
 
       if (error) throw error;
 
-      if (!clients || clients.length === 0) {
+      // Filter for connected clients only
+      const connectedClients = clients?.filter(
+        (client: any) => client.qbo_connections?.connection_status === 'connected'
+      ) || [];
+
+      if (connectedClients.length === 0) {
         toast({
           title: "No Connected Clients",
           description: "No active connected clients found to reconcile.",
@@ -117,7 +123,7 @@ export function useBulkReconciliation() {
         return { success: false, error: 'No connected clients' };
       }
 
-      const clientIds = clients.map(client => client.id);
+      const clientIds = connectedClients.map((client: any) => client.id);
       return await runBulkReconciliation(clientIds);
     } catch (error) {
       console.error('Run all reconciliations error:', error);

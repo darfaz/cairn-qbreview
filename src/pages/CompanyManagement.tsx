@@ -54,29 +54,31 @@ const CompanyManagement = () => {
         .from('clients')
         .select(`
           id,
-          name,
+          client_name,
           realm_id,
-          connection_status,
-          status,
-          last_sync_at,
           qbo_connections (
+            connection_status,
             token_expires_at
           )
-        `)
-        .eq('is_active', true);
+        `);
 
       if (error) throw error;
 
-      const mappedCompanies: ConnectedCompany[] = clients?.map(client => ({
-        id: client.id,
-        name: client.name,
-        realmId: client.realm_id,
-        connectionStatus: client.connection_status as ConnectedCompany['connectionStatus'],
-        status: getStatusColor(client.connection_status, client.qbo_connections?.[0]?.token_expires_at),
-        lastSyncAt: client.last_sync_at ? new Date(client.last_sync_at) : undefined,
-        tokenExpiresAt: client.qbo_connections?.[0]?.token_expires_at ? 
-          new Date(client.qbo_connections[0].token_expires_at) : undefined
-      })) || [];
+      const mappedCompanies: ConnectedCompany[] = clients?.map(client => {
+        const qboConnection = Array.isArray(client.qbo_connections) ? client.qbo_connections[0] : client.qbo_connections;
+        const connectionStatus = qboConnection?.connection_status || 'disconnected';
+        
+        return {
+          id: client.id,
+          name: client.client_name,
+          realmId: client.realm_id,
+          connectionStatus: connectionStatus as ConnectedCompany['connectionStatus'],
+          status: getStatusColor(connectionStatus, qboConnection?.token_expires_at),
+          lastSyncAt: undefined, // Not available in new schema
+          tokenExpiresAt: qboConnection?.token_expires_at ? 
+            new Date(qboConnection.token_expires_at) : undefined
+        };
+      }) || [];
 
       setCompanies(mappedCompanies);
     } catch (error) {

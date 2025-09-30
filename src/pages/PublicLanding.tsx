@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,13 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Search, LogIn, UserPlus, Building2 } from 'lucide-react';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ClientGrid } from '@/components/dashboard/ClientGrid';
+import { BulkReconciliationControls } from '@/components/dashboard/BulkReconciliationControls';
 import { generateMockClients, mockSummary } from '@/data/mockClients';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const PublicLanding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   
   const allClients = useMemo(() => generateMockClients(105), []);
   
@@ -25,6 +29,12 @@ const PublicLanding = () => {
     ).slice(0, 20);
   }, [allClients, searchQuery]);
 
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
+
   const handleDemoAction = () => {
     toast({
       title: 'Demo Mode',
@@ -32,6 +42,10 @@ const PublicLanding = () => {
       variant: 'default',
     });
   };
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,14 +107,23 @@ const PublicLanding = () => {
         {/* Summary Cards */}
         <SummaryCards summary={mockSummary} />
         
+        {/* Bulk Reconciliation Controls */}
+        <div className="mb-8">
+          <BulkReconciliationControls
+            selectedClientIds={selectedClientIds}
+            onSelectionChange={setSelectedClientIds}
+            totalClients={filteredClients.length}
+          />
+        </div>
+
         {/* Client Grid */}
         <ClientGrid
           clients={filteredClients}
           onRunReconciliation={handleDemoAction}
           onViewHistory={handleDemoAction}
           onReconnect={handleDemoAction}
-          selectedClientIds={[]}
-          onSelectionChange={() => {}}
+          selectedClientIds={selectedClientIds}
+          onSelectionChange={setSelectedClientIds}
         />
 
         {/* CTA Section */}

@@ -25,12 +25,12 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Routes>
-              <Route path="/" element={
+              <Route path="/" element={<PublicLanding />} />
+              <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Index />
                 </ProtectedRoute>
               } />
-              <Route path="/landing" element={<PublicLanding />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/settings" element={
                 <ProtectedRoute>
