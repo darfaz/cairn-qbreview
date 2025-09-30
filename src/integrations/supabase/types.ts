@@ -196,8 +196,6 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
-          dropbox_access_token: string | null
-          dropbox_connected: boolean | null
           email: string | null
           id: string
           logo_url: string | null
@@ -210,8 +208,6 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
-          dropbox_access_token?: string | null
-          dropbox_connected?: boolean | null
           email?: string | null
           id?: string
           logo_url?: string | null
@@ -224,8 +220,6 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
-          dropbox_access_token?: string | null
-          dropbox_connected?: boolean | null
           email?: string | null
           id?: string
           logo_url?: string | null
