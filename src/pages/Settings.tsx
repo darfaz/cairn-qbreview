@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Calendar, Settings as SettingsIcon, Key } from 'lucide-react';
+import { CSVUpload } from '@/components/clients/CSVUpload';
+import { Loader2, Save, Calendar, Settings as SettingsIcon, Key, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ScheduledRunSettings {
   id: string;
@@ -18,6 +21,7 @@ interface ScheduledRunSettings {
 
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<ScheduledRunSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +30,18 @@ const Settings = () => {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  const handleUploadComplete = () => {
+    toast({
+      title: 'Refreshing Dashboard',
+      description: 'Navigating to dashboard to view imported clients...',
+    });
+    
+    // Navigate to dashboard after a brief delay
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 1500);
+  };
 
   const fetchSettings = async () => {
     try {
@@ -160,7 +176,23 @@ const Settings = () => {
           <h1 className="text-3xl font-bold">Settings</h1>
         </div>
 
-        <div className="grid gap-6 max-w-2xl">
+        <Tabs defaultValue="clients" className="max-w-4xl">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="clients">
+              <Upload className="h-4 w-4 mr-2" />
+              Clients
+            </TabsTrigger>
+            <TabsTrigger value="reconciliation">
+              <Calendar className="h-4 w-4 mr-2" />
+              Reconciliation
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="clients" className="space-y-6 mt-6">
+            <CSVUpload onUploadComplete={handleUploadComplete} />
+          </TabsContent>
+
+          <TabsContent value="reconciliation" className="space-y-6 mt-6">
           {/* Scheduled Runs Settings */}
           <Card>
             <CardHeader>
@@ -304,8 +336,9 @@ const Settings = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
-        </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
