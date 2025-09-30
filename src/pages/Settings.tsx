@@ -1,131 +1,163 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CSVUpload } from '@/components/CSVUpload';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Calendar, Settings as SettingsIcon, Key } from 'lucide-react';
+import { Loader2, Save, Building2, Download, Upload, AlertTriangle, Users } from 'lucide-react';
+import { toast } from 'sonner';
+import Papa from 'papaparse';
 
-interface ScheduledRunSettings {
+interface Firm {
   id: string;
-  day_of_month: number;
-  enabled: boolean;
-  last_run_date: string | null;
-  next_run_date: string | null;
+  name: string;
+  owner_id: string;
+  email: string | null;
 }
 
-
 const Settings = () => {
-  const [settings, setSettings] = useState<ScheduledRunSettings | null>(null);
+  const navigate = useNavigate();
+  const [firm, setFirm] = useState<Firm | null>(null);
+  const [firmName, setFirmName] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
+  const [clientCount, setClientCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
-    fetchSettings();
+    fetchData();
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('scheduled_runs')
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error('Error fetching settings:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load settings',
-          variant: 'destructive',
-        });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
         return;
       }
 
-      setSettings(data);
-    } catch (error) {
-      console.error('Error:', error);
+      // Fetch firm
+      const { data: firmData, error: firmError } = await supabase
+        .from('firms')
+        .select('*')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (firmError && firmError.code !== 'PGRST116') {
+        throw firmError;
+      }
+
+      if (firmData) {
+        setFirm(firmData);
+        setFirmName(firmData.name);
+        setOwnerEmail(user.email || '');
+      }
+
+      // Fetch client count
+      const { count } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
+      setClientCount(count || 0);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load settings');
     } finally {
       setLoading(false);
     }
   };
 
-
-  const handleSave = async () => {
-    if (!settings) return;
+  const handleUpdateFirm = async () => {
+    if (!firm) return;
 
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('scheduled_runs')
-        .update({
-          day_of_month: settings.day_of_month,
-          enabled: settings.enabled,
-        })
-        .eq('id', settings.id);
+        .from('firms')
+        .update({ name: firmName })
+        .eq('id', firm.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      toast({
-        title: 'Settings Saved',
-        description: 'Scheduled run settings have been updated successfully',
-      });
+      toast.success('Firm name updated successfully');
+      setFirm({ ...firm, name: firmName });
     } catch (error: any) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save settings',
-        variant: 'destructive',
-      });
+      console.error('Error updating firm:', error);
+      toast.error('Failed to update firm name');
     } finally {
       setSaving(false);
     }
   };
 
-
-  const runScheduledReconciliation = async () => {
+  const downloadCurrentList = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('run-reconciliation', {
-        body: { runType: 'scheduled' }
+      const { data, error } = await supabase
+        .from('clients')
+        .select('client_name, realm_id, dropbox_folder_url, dropbox_folder_path')
+        .eq('is_active', true)
+        .order('client_name');
+
+      if (error) throw error;
+
+      const csv = Papa.unparse(data || [], {
+        columns: ['client_name', 'realm_id', 'dropbox_folder_url', 'dropbox_folder_path'],
+        header: true
       });
 
-      if (error) {
-        throw error;
-      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clients-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Reconciliation Started',
-        description: 'Scheduled reconciliation has been initiated for all connected clients',
-      });
-
-      // Refresh settings to update last run date
-      setTimeout(() => {
-        fetchSettings();
-      }, 2000);
+      toast.success('Client list downloaded');
     } catch (error: any) {
-      console.error('Error running reconciliation:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to start reconciliation',
-        variant: 'destructive',
-      });
+      console.error('Error downloading list:', error);
+      toast.error('Failed to download client list');
     }
   };
 
-  const calculateNextRunDate = (dayOfMonth: number) => {
-    const now = new Date();
-    const nextRun = new Date(now.getFullYear(), now.getMonth(), dayOfMonth);
+  const downloadTemplate = () => {
+    const template = `Client Name,Realm_ID,Dropbox,Dropbox to
+Example Client,1234567890123456,https://www.dropbox.com/scl/fo/example,/Clients/Example/`;
     
-    // If the day has already passed this month, schedule for next month
-    if (nextRun < now) {
-      nextRun.setMonth(nextRun.getMonth() + 1);
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'client-import-template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Template downloaded');
+  };
+
+  const replaceAllClients = async () => {
+    if (!confirm('This will delete ALL existing clients and their review history. Are you sure?')) {
+      return;
     }
-    
-    return nextRun.toLocaleDateString();
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (error) throw error;
+
+      toast.success('All clients removed. Upload your new CSV.');
+      setClientCount(0);
+    } catch (error: any) {
+      console.error('Error deleting clients:', error);
+      toast.error('Failed to delete clients');
+    }
   };
 
   if (loading) {
@@ -138,175 +170,118 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border px-6 py-4 mb-8">
+      <header className="bg-card border-b px-6 py-4">
         <div className="flex items-center justify-between">
-          <button 
-            onClick={() => window.location.href = '/'}
-            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-          >
+          <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">C</span>
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
-              <p className="text-sm text-muted-foreground">QuickBooks Reconciliation Dashboard</p>
+              <h1 className="text-xl font-semibold">Cairn Accounting</h1>
+              <p className="text-sm text-muted-foreground">QuickBooks Review Management</p>
             </div>
-          </button>
+          </div>
+          <Button variant="outline" onClick={() => navigate('/dashboard')}>
+            Back to Dashboard
+          </Button>
         </div>
       </header>
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex items-center gap-3 mb-8">
-          <SettingsIcon className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Settings</h1>
-        </div>
 
-        <div className="grid gap-6 max-w-2xl">
-          {/* Scheduled Runs Settings */}
+      <main className="container mx-auto px-6 py-8 max-w-4xl">
+        <h1 className="text-3xl font-bold mb-8">Settings</h1>
+
+        <div className="space-y-6">
+          {/* Firm Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Scheduled Reconciliation
+                <Building2 className="h-5 w-5" />
+                Firm Information
               </CardTitle>
-              <CardDescription>
-                Configure when automatic reconciliations should run for all connected clients
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {settings && (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Enable Scheduled Runs</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Automatically run reconciliations for all connected clients
-                      </div>
-                    </div>
-                    <Switch
-                      checked={settings.enabled}
-                      onCheckedChange={(enabled) =>
-                        setSettings({ ...settings, enabled })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="dayOfMonth">Day of Month</Label>
-                    <Input
-                      id="dayOfMonth"
-                      type="number"
-                      min="1"
-                      max="28"
-                      value={settings.day_of_month}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          day_of_month: parseInt(e.target.value) || 15,
-                        })
-                      }
-                      className="w-32"
-                    />
-                    <div className="text-sm text-muted-foreground">
-                      Reconciliations will run on the {settings.day_of_month}
-                      {settings.day_of_month === 1 ? 'st' : 
-                       settings.day_of_month === 2 ? 'nd' : 
-                       settings.day_of_month === 3 ? 'rd' : 'th'} of each month
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <Label className="text-muted-foreground">Last Run</Label>
-                      <div className="font-medium">
-                        {settings.last_run_date 
-                          ? new Date(settings.last_run_date).toLocaleDateString()
-                          : 'Never'
-                        }
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Next Run</Label>
-                      <div className="font-medium">
-                        {settings.enabled 
-                          ? calculateNextRunDate(settings.day_of_month)
-                          : 'Disabled'
-                        }
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button onClick={handleSave} disabled={saving}>
-                      {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Settings
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={runScheduledReconciliation}
-                      disabled={!settings.enabled}
-                    >
-                      Run Now
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Webhook Integration Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Integration Status
-              </CardTitle>
-              <CardDescription>
-                Webhook Integration with QuickBooks Online
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 bg-muted rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">
-                  Webhook Integration Pending - OAuth functionality has been removed
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* n8n Integration Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>n8n Integration</CardTitle>
-              <CardDescription>
-                Configuration for the n8n workflow integration
-              </CardDescription>
+              <CardDescription>Manage your firm details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Webhook URL</Label>
-                <Input 
-                  value="https://execture.app.n8n.cloud/workflow/FR1nnHx3WiQJOWGv"
-                  readOnly
-                  className="font-mono text-sm"
+                <Label htmlFor="firmName">Firm Name</Label>
+                <Input
+                  id="firmName"
+                  value={firmName}
+                  onChange={(e) => setFirmName(e.target.value)}
+                  placeholder="Enter firm name"
                 />
-                <div className="text-sm text-muted-foreground">
-                  This webhook URL is used to trigger reconciliation workflows
-                </div>
               </div>
-              
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="text-sm font-medium mb-2">Integration Status</div>
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <div className="h-2 w-2 bg-green-600 rounded-full"></div>
-                  Connected
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="ownerEmail">Owner Email</Label>
+                <Input
+                  id="ownerEmail"
+                  value={ownerEmail}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <Button onClick={handleUpdateFirm} disabled={saving || !firmName.trim()}>
+                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                <Save className="h-4 w-4 mr-2" />
+                Update Firm Name
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Client Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Client Management
+              </CardTitle>
+              <CardDescription>
+                {clientCount} client{clientCount !== 1 ? 's' : ''} imported
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {firm && <CSVUpload firmId={firm.id} onUploadComplete={fetchData} />}
+
+              <div className="flex flex-wrap gap-2 pt-4">
+                <Button variant="outline" onClick={downloadCurrentList} disabled={clientCount === 0}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Current List
+                </Button>
+                <Button variant="outline" onClick={downloadTemplate}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Template
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={replaceAllClients}
+                  disabled={clientCount === 0}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Replace All Clients
+                </Button>
               </div>
             </CardContent>
           </Card>
+
+          {/* Dropbox Setup Instructions */}
+          <Alert>
+            <Upload className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <h4 className="font-semibold">Dropbox Setup Instructions:</h4>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>Create a folder in Dropbox for each client</li>
+                  <li>Share each folder with fazulyanov@gmail.com (edit permission)</li>
+                  <li>Generate a shareable link for each folder</li>
+                  <li>Add both the shareable link and folder path to your CSV</li>
+                </ol>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Note: The shareable link is for viewing in the dashboard. The shared folder allows n8n to save review files automatically.
+                </p>
+              </div>
+            </AlertDescription>
+          </Alert>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

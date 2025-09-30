@@ -58,72 +58,36 @@ export type Database = {
       }
       clients: {
         Row: {
-          action_items_count: number | null
           client_name: string
-          connection_status: string | null
           created_at: string
-          created_by: string | null
+          dropbox_folder_path: string | null
           dropbox_folder_url: string | null
           firm_id: string | null
           id: string
           is_active: boolean
-          is_sandbox: boolean
-          last_error: string | null
-          last_review_at: string | null
-          last_review_date: string | null
-          last_sync_at: string | null
-          name: string
-          qbo_company_name: string | null
           realm_id: string
-          review_status: string | null
-          sheet_url: string | null
-          status: string | null
           updated_at: string
         }
         Insert: {
-          action_items_count?: number | null
           client_name: string
-          connection_status?: string | null
           created_at?: string
-          created_by?: string | null
+          dropbox_folder_path?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
           is_active?: boolean
-          is_sandbox?: boolean
-          last_error?: string | null
-          last_review_at?: string | null
-          last_review_date?: string | null
-          last_sync_at?: string | null
-          name: string
-          qbo_company_name?: string | null
           realm_id: string
-          review_status?: string | null
-          sheet_url?: string | null
-          status?: string | null
           updated_at?: string
         }
         Update: {
-          action_items_count?: number | null
           client_name?: string
-          connection_status?: string | null
           created_at?: string
-          created_by?: string | null
+          dropbox_folder_path?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
           is_active?: boolean
-          is_sandbox?: boolean
-          last_error?: string | null
-          last_review_at?: string | null
-          last_review_date?: string | null
-          last_sync_at?: string | null
-          name?: string
-          qbo_company_name?: string | null
           realm_id?: string
-          review_status?: string | null
-          sheet_url?: string | null
-          status?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -197,6 +161,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          owner_id: string | null
           phone: string | null
           updated_at: string
           website: string | null
@@ -208,6 +173,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          owner_id?: string | null
           phone?: string | null
           updated_at?: string
           website?: string | null
@@ -219,6 +185,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          owner_id?: string | null
           phone?: string | null
           updated_at?: string
           website?: string | null
@@ -329,53 +296,6 @@ export type Database = {
           },
         ]
       }
-      qbo_clients: {
-        Row: {
-          client_name: string
-          created_at: string | null
-          firm_id: string | null
-          id: string
-          is_active: boolean | null
-          last_review_date: string | null
-          last_review_status: string | null
-          realm_id: string
-          sheet_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          client_name: string
-          created_at?: string | null
-          firm_id?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_review_date?: string | null
-          last_review_status?: string | null
-          realm_id: string
-          sheet_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          client_name?: string
-          created_at?: string | null
-          firm_id?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_review_date?: string | null
-          last_review_status?: string | null
-          realm_id?: string
-          sheet_url?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "qbo_clients_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "qbo_firms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       qbo_connections: {
         Row: {
           access_token: string
@@ -434,27 +354,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      qbo_firms: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       qbo_oauth_states: {
         Row: {
@@ -592,97 +491,43 @@ export type Database = {
           },
         ]
       }
-      review_history: {
-        Row: {
-          client_id: string | null
-          created_at: string | null
-          error_message: string | null
-          id: string
-          review_date: string | null
-          sheet_url: string | null
-          status: string
-        }
-        Insert: {
-          client_id?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          review_date?: string | null
-          sheet_url?: string | null
-          status?: string
-        }
-        Update: {
-          client_id?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          review_date?: string | null
-          sheet_url?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "review_history_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "qbo_clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      review_runs: {
+      reviews: {
         Row: {
           action_items_count: number | null
           client_id: string
           completed_at: string | null
-          created_by: string | null
-          error_message: string | null
-          firm_id: string
+          created_at: string | null
           id: string
-          metadata: Json | null
           sheet_url: string | null
-          started_at: string
           status: string
+          triggered_at: string
         }
         Insert: {
           action_items_count?: number | null
           client_id: string
           completed_at?: string | null
-          created_by?: string | null
-          error_message?: string | null
-          firm_id: string
+          created_at?: string | null
           id?: string
-          metadata?: Json | null
           sheet_url?: string | null
-          started_at?: string
-          status?: string
+          status: string
+          triggered_at?: string
         }
         Update: {
           action_items_count?: number | null
           client_id?: string
           completed_at?: string | null
-          created_by?: string | null
-          error_message?: string | null
-          firm_id?: string
+          created_at?: string | null
           id?: string
-          metadata?: Json | null
           sheet_url?: string | null
-          started_at?: string
           status?: string
+          triggered_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "review_runs_client_id_fkey"
+            foreignKeyName: "reviews_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "review_runs_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firms"
             referencedColumns: ["id"]
           },
         ]
@@ -748,6 +593,14 @@ export type Database = {
       }
       user_can_modify_qbo_tokens: {
         Args: { _connection_client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_owns_client_firm: {
+        Args: { _client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_owns_firm: {
+        Args: { _firm_id: string; _user_id: string }
         Returns: boolean
       }
       validate_token_integrity: {
