@@ -165,11 +165,33 @@ const Index = () => {
   };
 
   const handleRunReconciliation = async (clientId: string) => {
-    toast({
-      title: 'Starting Reconciliation',
-      description: 'Review process initiated for this client.',
-    });
-    // TODO: Implement actual reconciliation logic
+    try {
+      const { triggerReview } = await import('@/lib/reviews');
+      
+      toast({
+        title: 'Starting Review',
+        description: 'Initiating review process...',
+      });
+
+      await triggerReview(clientId);
+      
+      toast({
+        title: 'Review Started',
+        description: 'The review is now processing. This may take a few minutes.',
+      });
+
+      // Refresh the client data after a short delay
+      setTimeout(() => {
+        fetchClients();
+      }, 2000);
+    } catch (error: any) {
+      console.error('Failed to run review:', error);
+      toast({
+        title: 'Failed to Start Review',
+        description: error.message || 'An error occurred while starting the review.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleViewHistory = (clientId: string) => {
@@ -262,6 +284,7 @@ const Index = () => {
             selectedClientIds={selectedClientIds}
             onSelectionChange={setSelectedClientIds}
             totalClients={filteredClients.length}
+            allClientIds={filteredClients.map(c => c.id)}
           />
         </div>
 

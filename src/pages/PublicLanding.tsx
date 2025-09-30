@@ -113,6 +113,7 @@ const PublicLanding = () => {
             selectedClientIds={selectedClientIds}
             onSelectionChange={setSelectedClientIds}
             totalClients={filteredClients.length}
+            allClientIds={filteredClients.map(c => c.id)}
           />
         </div>
 
