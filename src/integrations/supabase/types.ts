@@ -63,6 +63,7 @@ export type Database = {
           connection_status: string | null
           created_at: string
           created_by: string | null
+          dropbox_folder_path: string | null
           dropbox_folder_url: string | null
           firm_id: string | null
           id: string
@@ -86,6 +87,7 @@ export type Database = {
           connection_status?: string | null
           created_at?: string
           created_by?: string | null
+          dropbox_folder_path?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
@@ -109,6 +111,7 @@ export type Database = {
           connection_status?: string | null
           created_at?: string
           created_by?: string | null
+          dropbox_folder_path?: string | null
           dropbox_folder_url?: string | null
           firm_id?: string | null
           id?: string
@@ -193,10 +196,13 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          dropbox_access_token: string | null
+          dropbox_connected: boolean | null
           email: string | null
           id: string
           logo_url: string | null
           name: string
+          owner_id: string | null
           phone: string | null
           updated_at: string
           website: string | null
@@ -204,10 +210,13 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          dropbox_access_token?: string | null
+          dropbox_connected?: boolean | null
           email?: string | null
           id?: string
           logo_url?: string | null
           name: string
+          owner_id?: string | null
           phone?: string | null
           updated_at?: string
           website?: string | null
@@ -215,10 +224,13 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          dropbox_access_token?: string | null
+          dropbox_connected?: boolean | null
           email?: string | null
           id?: string
           logo_url?: string | null
           name?: string
+          owner_id?: string | null
           phone?: string | null
           updated_at?: string
           website?: string | null
@@ -687,6 +699,68 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          action_items_count: number | null
+          client_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          duplicate_transactions_count: number | null
+          error_message: string | null
+          id: string
+          run_date: string | null
+          sheet_url: string | null
+          status: string
+          triggered_at: string
+          uncategorized_expense_count: number | null
+          uncategorized_income_count: number | null
+          unreconciled_transactions_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_items_count?: number | null
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duplicate_transactions_count?: number | null
+          error_message?: string | null
+          id?: string
+          run_date?: string | null
+          sheet_url?: string | null
+          status?: string
+          triggered_at?: string
+          uncategorized_expense_count?: number | null
+          uncategorized_income_count?: number | null
+          unreconciled_transactions_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_items_count?: number | null
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duplicate_transactions_count?: number | null
+          error_message?: string | null
+          id?: string
+          run_date?: string | null
+          sheet_url?: string | null
+          status?: string
+          triggered_at?: string
+          uncategorized_expense_count?: number | null
+          uncategorized_income_count?: number | null
+          unreconciled_transactions_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_runs: {
         Row: {
           created_at: string
@@ -748,6 +822,14 @@ export type Database = {
       }
       user_can_modify_qbo_tokens: {
         Args: { _connection_client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_owns_client_firm: {
+        Args: { _client_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_owns_firm: {
+        Args: { _firm_id: string; _user_id: string }
         Returns: boolean
       }
       validate_token_integrity: {
