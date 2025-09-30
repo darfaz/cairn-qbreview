@@ -79,7 +79,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
     if (actionItems === undefined || actionItems === null) {
       return (
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-muted-foreground/30"></span>
+          <span className="w-2 h-2 rounded-full bg-gray-400"></span>
           <span className="text-muted-foreground">—</span>
         </div>
       );
@@ -88,7 +88,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
     if (actionItems === 0) {
       return (
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-status-green"></span>
+          <span className="w-2 h-2 rounded-full bg-green-500"></span>
           <span className="text-foreground">Clean</span>
         </div>
       );
@@ -97,7 +97,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
     if (actionItems <= 3) {
       return (
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-status-yellow"></span>
+          <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
           <span className="text-foreground">{actionItems} items</span>
         </div>
       );
@@ -105,7 +105,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
     
     return (
       <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-status-red"></span>
+        <span className="w-2 h-2 rounded-full bg-red-500"></span>
         <span className="text-foreground">{actionItems} items</span>
       </div>
     );
