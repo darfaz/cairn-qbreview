@@ -1,31 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { ClientReconciliationTable } from '@/components/dashboard/ClientReconciliationTable';
+import { SummaryCards } from '@/components/dashboard/SummaryCards';
+import { BulkReconciliationControls } from '@/components/dashboard/BulkReconciliationControls';
+import { ClientGrid } from '@/components/dashboard/ClientGrid';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Building2, Search } from 'lucide-react';
+import { Client, DashboardSummary } from '@/types/dashboard';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClientWithReview {
   id: string;
-  name: string;
   client_name: string;
   realm_id: string;
-  connection_status: string | null;
   dropbox_folder_url: string | null;
-  latest_review?: {
-    action_items_count: number;
-    run_date: string;
-    sheet_url: string | null;
-    status: string;
-  } | null;
+  last_review_date: string | null;
+  review_status: string | null;
+  action_items_count: number | null;
 }
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [hasClients, setHasClients] = useState<boolean | null>(null);
   const [clients, setClients] = useState<ClientWithReview[]>([]);
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchClients();
@@ -33,15 +35,34 @@ const Index = () => {
 
   const fetchClients = async () => {
     try {
+      // Get current user's firm_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setHasClients(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('firm_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.firm_id) {
+        setHasClients(false);
+        return;
+      }
+
+      // Fetch clients with their latest review using a more efficient approach
       const { data, error } = await supabase
         .from('clients')
         .select(`
           id,
           client_name,
           realm_id,
-          dropbox_folder_url,
-          qbo_connections(connection_status)
+          dropbox_folder_url
         `)
+        .eq('firm_id', profile.firm_id)
         .order('client_name');
 
       if (error) throw error;
@@ -52,35 +73,34 @@ const Index = () => {
         return;
       }
 
-      // Fetch all reviews for these clients
+      // Fetch latest review for each client
       const clientIds = data.map(c => c.id);
-      const reviewsResponse = await supabase
+      const { data: reviews } = await supabase
         .from('reviews')
-        .select('id, client_id, action_items_count, triggered_at, sheet_url, status')
+        .select('client_id, triggered_at, status, action_items_count')
         .in('client_id', clientIds)
         .order('triggered_at', { ascending: false });
-      
-      const allReviews = reviewsResponse.data || [];
 
-      // Match each client with their latest review
+      // Group reviews by client_id and get the latest one
+      const latestReviewsByClient = new Map();
+      reviews?.forEach(review => {
+        if (!latestReviewsByClient.has(review.client_id)) {
+          latestReviewsByClient.set(review.client_id, review);
+        }
+      });
+
+      // Map clients with their latest review
       const clientsWithReviews: ClientWithReview[] = data.map((client) => {
-        const clientReviews = allReviews.filter((r) => r.client_id === client.id) || [];
-        const latestReview = clientReviews.length > 0 ? clientReviews[0] : null;
-        const qboConnection = Array.isArray(client.qbo_connections) ? client.qbo_connections[0] : client.qbo_connections;
-
+        const latestReview = latestReviewsByClient.get(client.id);
+        
         return {
           id: client.id,
-          name: client.client_name,
           client_name: client.client_name,
           realm_id: client.realm_id,
-          connection_status: qboConnection?.connection_status || null,
           dropbox_folder_url: client.dropbox_folder_url,
-          latest_review: latestReview ? {
-            action_items_count: latestReview.action_items_count || 0,
-            run_date: latestReview.triggered_at || '',
-            sheet_url: latestReview.sheet_url || null,
-            status: latestReview.status || 'unknown',
-          } : null,
+          last_review_date: latestReview?.triggered_at || null,
+          review_status: latestReview?.status || null,
+          action_items_count: latestReview?.action_items_count ?? null,
         };
       });
 
@@ -91,6 +111,81 @@ const Index = () => {
       setHasClients(false);
       setClients([]);
     }
+  };
+
+  // Convert ClientWithReview to Client type for components
+  const displayClients: Client[] = useMemo(() => {
+    return clients.map(client => ({
+      id: client.id,
+      name: client.client_name,
+      realmId: client.realm_id,
+      qboCompanyName: client.client_name,
+      lastReviewDate: client.last_review_date ? new Date(client.last_review_date) : new Date(),
+      status: getStatusFromActionItems(client.action_items_count),
+      actionItemsCount: client.action_items_count ?? 0,
+      connectionStatus: client.review_status === 'failed' ? 'needs_reconnect' : 'connected',
+      dropboxFolderUrl: client.dropbox_folder_url || undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+  }, [clients]);
+
+  // Filter clients based on search query
+  const filteredClients = useMemo(() => {
+    if (!searchQuery) return displayClients;
+    
+    return displayClients.filter(client =>
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.realmId.includes(searchQuery)
+    );
+  }, [displayClients, searchQuery]);
+
+  // Calculate summary statistics
+  const summary: DashboardSummary = useMemo(() => {
+    const total = clients.length;
+    const greenClients = clients.filter(c => c.action_items_count === 0).length;
+    const yellowClients = clients.filter(c => c.action_items_count && c.action_items_count >= 1 && c.action_items_count <= 3).length;
+    const redClients = clients.filter(c => c.action_items_count && c.action_items_count >= 4).length;
+    const disconnectedClients = clients.filter(c => c.review_status === 'failed').length;
+
+    return {
+      totalClients: total,
+      greenClients,
+      yellowClients,
+      redClients,
+      disconnectedClients,
+      nextScheduledRun: new Date(), // Placeholder
+    };
+  }, [clients]);
+
+  const getStatusFromActionItems = (count: number | null): 'green' | 'yellow' | 'red' => {
+    if (count === null || count === 0) return 'green';
+    if (count >= 1 && count <= 3) return 'yellow';
+    return 'red';
+  };
+
+  const handleRunReconciliation = async (clientId: string) => {
+    toast({
+      title: 'Starting Reconciliation',
+      description: 'Review process initiated for this client.',
+    });
+    // TODO: Implement actual reconciliation logic
+  };
+
+  const handleViewHistory = (clientId: string) => {
+    toast({
+      title: 'View History',
+      description: 'Opening review history for this client.',
+    });
+    // TODO: Implement history view
+  };
+
+  const handleReconnect = (clientId: string) => {
+    toast({
+      title: 'Reconnection Required',
+      description: 'Please reconnect this QuickBooks client.',
+    });
+    // TODO: Implement reconnection logic
   };
 
 
@@ -145,7 +240,40 @@ const Index = () => {
           </p>
         </div>
 
-        <ClientReconciliationTable clients={clients} onRefresh={fetchClients} />
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search clients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <SummaryCards summary={summary} />
+        
+        {/* Bulk Reconciliation Controls */}
+        <div className="mb-8">
+          <BulkReconciliationControls
+            selectedClientIds={selectedClientIds}
+            onSelectionChange={setSelectedClientIds}
+            totalClients={filteredClients.length}
+          />
+        </div>
+
+        {/* Client Grid */}
+        <ClientGrid
+          clients={filteredClients}
+          onRunReconciliation={handleRunReconciliation}
+          onViewHistory={handleViewHistory}
+          onReconnect={handleReconnect}
+          selectedClientIds={selectedClientIds}
+          onSelectionChange={setSelectedClientIds}
+        />
       </main>
     </div>
   );

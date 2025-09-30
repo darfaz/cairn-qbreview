@@ -66,12 +66,12 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Connection Issues
           </CardTitle>
-          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-warning">{summary.disconnectedClients}</div>
+          <div className="text-2xl font-bold">{summary.disconnectedClients}</div>
           <p className="text-xs text-muted-foreground">
-            Require reconnection
+            {summary.disconnectedClients === 0 ? 'All connections active' : 'Require reconnection'}
           </p>
         </CardContent>
       </Card>
@@ -84,9 +84,9 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-lg font-bold">{formatDate(summary.nextScheduledRun)}</div>
+          <div className="text-lg font-bold">Not scheduled</div>
           <p className="text-xs text-muted-foreground">
-            Monthly reconciliation
+            Manual reviews only
           </p>
         </CardContent>
       </Card>

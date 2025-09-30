@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { Client } from '@/types/dashboard';
 import { StatusIndicator } from './StatusIndicator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { BulkReconciliationControls } from './BulkReconciliationControls';
 import {
   Table,
   TableBody,
@@ -27,7 +25,6 @@ import {
   ExternalLink,
   RefreshCw 
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ClientGridProps {
   clients: Client[];
@@ -98,22 +95,15 @@ export function ClientGrid({
   };
 
   return (
-    <div className="space-y-6">
-      <BulkReconciliationControls
-        selectedClientIds={selectedClientIds}
-        onSelectionChange={onSelectionChange}
-        totalClients={clients.length}
-      />
+    <div className="dashboard-card">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Client Reconciliations</h2>
+        <p className="text-sm text-muted-foreground">
+          Monitor and manage QuickBooks reconciliation status for all clients
+        </p>
+      </div>
 
-      <div className="dashboard-card">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Client Reconciliations</h2>
-          <p className="text-sm text-muted-foreground">
-            Monitor and manage QuickBooks reconciliation status for all clients
-          </p>
-        </div>
-
-        <Table>
+      <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="table-header w-12">
@@ -241,6 +231,5 @@ export function ClientGrid({
         </TableBody>
       </Table>
     </div>
-  </div>
   );
 }
