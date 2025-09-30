@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import PublicLanding from "./pages/PublicLanding";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
+import CompanySelection from "./pages/CompanySelection";
+import CompanyManagement from "./pages/CompanyManagement";
+import Clients from "./pages/Clients";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -22,16 +25,31 @@ const App = () => {
             <Toaster />
             <Sonner />
             <Routes>
-              <Route path="/" element={<PublicLanding />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={
+              <Route path="/" element={
                 <ProtectedRoute>
                   <Index />
                 </ProtectedRoute>
               } />
+              <Route path="/landing" element={<PublicLanding />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="/company-selection" element={
+                <ProtectedRoute>
+                  <CompanySelection />
+                </ProtectedRoute>
+              } />
+              <Route path="/clients" element={
+                <ProtectedRoute>
+                  <Clients />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings/companies" element={
+                <ProtectedRoute>
+                  <CompanyManagement />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

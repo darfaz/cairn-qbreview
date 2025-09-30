@@ -17,9 +17,3 @@ verify_jwt = false
 
 [functions.quickbooks-health-check]
 verify_jwt = false
-
-[functions.trigger-review]
-verify_jwt = true
-
-[functions.review-callback]
-verify_jwt = false
