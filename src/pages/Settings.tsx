@@ -7,7 +7,6 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Save, Calendar, Settings as SettingsIcon, Key } from 'lucide-react';
-import DropboxConnect from '@/components/settings/DropboxConnect';
 
 interface ScheduledRunSettings {
   id: string;
@@ -275,9 +274,6 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Dropbox Integration */}
-          <DropboxConnect />
 
           {/* n8n Integration Settings */}
           <Card>

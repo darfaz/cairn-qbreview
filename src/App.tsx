@@ -13,7 +13,6 @@ import CompanyManagement from "./pages/CompanyManagement";
 import Clients from "./pages/Clients";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
-import DropboxCallback from "./pages/DropboxCallback";
 
 const queryClient = new QueryClient();
 
@@ -51,11 +50,6 @@ const App = () => {
               <Route path="/settings/companies" element={
                 <ProtectedRoute>
                   <CompanyManagement />
-                </ProtectedRoute>
-              } />
-              <Route path="/auth/dropbox/callback" element={
-                <ProtectedRoute>
-                  <DropboxCallback />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
