@@ -57,15 +57,17 @@ const Index = () => {
 
       // Fetch all reviews for these clients
       const clientIds = data.map(c => c.id);
-      const { data: allReviews } = await supabase
-        .from('review_history')
-        .select('*')
+      const reviewsResponse = await supabase
+        .from('reviews' as any)
+        .select('id, client_id, action_items_count, run_date, sheet_url, status')
         .in('client_id', clientIds)
-        .order('review_date', { ascending: false });
+        .order('run_date', { ascending: false });
+      
+      const allReviews = reviewsResponse.data as any[];
 
       // Match each client with their latest review
       const clientsWithReviews: ClientWithReview[] = data.map((client) => {
-        const clientReviews = allReviews?.filter(r => r.client_id === client.id) || [];
+        const clientReviews = (allReviews as any[])?.filter((r: any) => r.client_id === client.id) || [];
         const latestReview = clientReviews.length > 0 ? clientReviews[0] : null;
 
         return {
@@ -76,8 +78,8 @@ const Index = () => {
           connection_status: client.connection_status,
           dropbox_folder_url: client.dropbox_folder_url,
           latest_review: latestReview ? {
-            action_items_count: 0, // review_history doesn't have this field, defaulting to 0
-            run_date: latestReview.review_date || '',
+            action_items_count: latestReview.action_items_count || 0,
+            run_date: latestReview.run_date || '',
             sheet_url: latestReview.sheet_url || null,
             status: latestReview.status || 'unknown',
           } : null,
