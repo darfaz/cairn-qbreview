@@ -22,6 +22,7 @@ interface ConnectedCompany {
   status: 'green' | 'yellow' | 'red' | 'gray';
   lastSyncAt?: Date;
   tokenExpiresAt?: Date;
+  dropboxFolderUrl?: string;
 }
 
 const CompanyManagement = () => {
@@ -55,7 +56,8 @@ const CompanyManagement = () => {
         .select(`
           id,
           client_name,
-          realm_id
+          realm_id,
+          dropbox_folder_url
         `);
 
       if (error) throw error;
@@ -68,7 +70,8 @@ const CompanyManagement = () => {
           connectionStatus: 'connected' as ConnectedCompany['connectionStatus'],
           status: 'green' as ConnectedCompany['status'],
           lastSyncAt: undefined,
-          tokenExpiresAt: undefined
+          tokenExpiresAt: undefined,
+          dropboxFolderUrl: client.dropbox_folder_url || undefined
         };
       }) || [];
 
@@ -187,8 +190,7 @@ const CompanyManagement = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Company Name</TableHead>
                   <TableHead>Realm ID</TableHead>
-                  <TableHead>Last Sync</TableHead>
-                  <TableHead>Token Status</TableHead>
+                  <TableHead>Dropbox</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -204,31 +206,28 @@ const CompanyManagement = () => {
                     <TableCell className="font-medium">{company.name}</TableCell>
                     <TableCell>{company.realmId}</TableCell>
                     <TableCell>
-                      {company.lastSyncAt ? company.lastSyncAt.toLocaleDateString() : 'Never'}
-                    </TableCell>
-                    <TableCell>
-                      {company.tokenExpiresAt ? (
-                        <span className={`text-sm ${
-                          company.status === 'red' ? 'text-destructive' :
-                          company.status === 'yellow' ? 'text-yellow-600' :
-                          'text-muted-foreground'
-                        }`}>
-                          Expires {company.tokenExpiresAt.toLocaleDateString()}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">No token data</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {company.connectionStatus !== 'connected' && (
+                      {company.dropboxFolderUrl ? (
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => handleReconnect(company.id, company.realmId)}
+                          className="p-0 h-auto text-primary hover:text-primary-hover"
+                          asChild
                         >
-                          Reconnect
+                          <a
+                            href={company.dropboxFolderUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-1"
+                          >
+                            <span className="text-xs">View</span>
+                          </a>
                         </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Not linked</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      {/* Actions if needed */}
                     </TableCell>
                   </TableRow>
                 ))}

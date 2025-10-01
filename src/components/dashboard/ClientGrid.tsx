@@ -116,7 +116,6 @@ export function ClientGrid({
               <TableHead className="table-header">Company Name</TableHead>
               <TableHead className="table-header">Last Review</TableHead>
               <TableHead className="table-header">Status</TableHead>
-              <TableHead className="table-header">Connection</TableHead>
               <TableHead className="table-header">Dropbox</TableHead>
               <TableHead className="table-header text-right">Actions</TableHead>
             </TableRow>
@@ -152,10 +151,6 @@ export function ClientGrid({
                   status={client.status} 
                   count={client.actionItemsCount}
                 />
-              </TableCell>
-              
-              <TableCell>
-                {getConnectionBadge(client.connectionStatus)}
               </TableCell>
               
               <TableCell>

@@ -142,9 +142,6 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
                 Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Connection
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Dropbox
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -155,7 +152,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
           <tbody className="divide-y divide-border">
             {clients.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                   No clients found. Add your first client to get started.
                 </td>
               </tr>
@@ -179,14 +176,6 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
                   </td>
                   <td className="px-4 py-4">
                     {getStatusDisplay(client.latest_review?.action_items_count)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <Badge 
-                      variant={client.connection_status === 'connected' ? 'default' : 'secondary'}
-                      className="bg-primary/10 text-primary hover:bg-primary/20"
-                    >
-                      {client.connection_status === 'connected' ? 'Connected' : 'Needs Reconnect'}
-                    </Badge>
                   </td>
                   <td className="px-4 py-4">
                     {client.dropbox_folder_url ? (
