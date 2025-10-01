@@ -195,9 +195,22 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
-          const validRows = results.data.filter((row: any) => 
-            row['Client Name'] && row['Realm_ID'] && row['Dropbox']
-          );
+          // Helper function to get value from row with multiple possible column names
+          const getValue = (row: any, ...possibleKeys: string[]): string | undefined => {
+            for (const key of possibleKeys) {
+              if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                return row[key];
+              }
+            }
+            return undefined;
+          };
+
+          const validRows = results.data.filter((row: any) => {
+            const clientName = getValue(row, 'Client Name', 'client_name');
+            const realmId = getValue(row, 'Realm_ID', 'realm_id');
+            const dropbox = getValue(row, 'Dropbox', 'dropbox_folder_url');
+            return clientName && realmId && dropbox;
+          });
 
           if (validRows.length === 0) {
             toast({
@@ -210,10 +223,10 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           }
 
           const clientsToInsert = validRows.map((row: any) => ({
-            client_name: row['Client Name']?.trim(),
-            realm_id: row['Realm_ID']?.trim(),
+            client_name: getValue(row, 'Client Name', 'client_name')?.trim(),
+            realm_id: getValue(row, 'Realm_ID', 'realm_id')?.trim(),
             firm_id: firmId,
-            dropbox_folder_url: row['Dropbox']?.trim(),
+            dropbox_folder_url: getValue(row, 'Dropbox', 'dropbox_folder_url')?.trim(),
           }));
 
           const { data, error } = await supabase
@@ -346,10 +359,10 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           <AlertDescription>
             <p className="font-medium mb-2">Required CSV columns:</p>
             <ul className="text-sm space-y-1 ml-4 list-disc">
-              <li><strong>Client Name</strong> - Name of the client (required)</li>
-              <li><strong>Realm_ID</strong> - QuickBooks Realm ID (required, must be unique)</li>
-              <li><strong>Dropbox</strong> - Dropbox folder URL (required)</li>
-              <li><strong>Dropbox to</strong> - Dropbox folder path (optional)</li>
+              <li><strong>Client Name</strong> or <strong>client_name</strong> - Name of the client (required)</li>
+              <li><strong>Realm_ID</strong> or <strong>realm_id</strong> - QuickBooks Realm ID (required, must be unique)</li>
+              <li><strong>Dropbox</strong> or <strong>dropbox_folder_url</strong> - Dropbox folder URL (required)</li>
+              <li><strong>Dropbox to</strong> or <strong>dropbox_folder_path</strong> - Dropbox folder path (optional)</li>
             </ul>
           </AlertDescription>
         </Alert>

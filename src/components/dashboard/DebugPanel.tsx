@@ -30,8 +30,7 @@ export function DebugPanel({ isVisible, onToggle }: DebugPanelProps) {
       // Count client connections  
       const { count } = await supabase
         .from('clients')
-        .select('*', { count: 'exact' })
-        .eq('is_active', true);
+        .select('*', { count: 'exact' });
 
       setDebugInfo({
         environment: 'Webhook Integration',
