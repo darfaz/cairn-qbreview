@@ -113,8 +113,17 @@ const Index = () => {
     }
   };
 
+  // Helper function - defined before useMemo calls
+  const getStatusFromActionItems = (count: number | null): 'green' | 'yellow' | 'red' => {
+    if (count === null || count === 0) return 'green';
+    if (count >= 1 && count <= 3) return 'yellow';
+    return 'red';
+  };
+
   // Convert ClientWithReview to Client type for components
   const displayClients: Client[] = useMemo(() => {
+    if (!clients || clients.length === 0) return [];
+    
     return clients.map(client => ({
       id: client.id,
       name: client.client_name,
@@ -142,6 +151,17 @@ const Index = () => {
 
   // Calculate summary statistics
   const summary: DashboardSummary = useMemo(() => {
+    if (!clients || clients.length === 0) {
+      return {
+        totalClients: 0,
+        greenClients: 0,
+        yellowClients: 0,
+        redClients: 0,
+        disconnectedClients: 0,
+        nextScheduledRun: new Date(),
+      };
+    }
+
     const total = clients.length;
     const greenClients = clients.filter(c => c.action_items_count === 0).length;
     const yellowClients = clients.filter(c => c.action_items_count && c.action_items_count >= 1 && c.action_items_count <= 3).length;
@@ -154,15 +174,9 @@ const Index = () => {
       yellowClients,
       redClients,
       disconnectedClients,
-      nextScheduledRun: new Date(), // Placeholder
+      nextScheduledRun: new Date(),
     };
   }, [clients]);
-
-  const getStatusFromActionItems = (count: number | null): 'green' | 'yellow' | 'red' => {
-    if (count === null || count === 0) return 'green';
-    if (count >= 1 && count <= 3) return 'yellow';
-    return 'red';
-  };
 
   const handleRunReconciliation = async (clientId: string) => {
     try {
