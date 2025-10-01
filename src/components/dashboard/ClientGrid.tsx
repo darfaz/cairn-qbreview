@@ -165,19 +165,17 @@ export function ClientGrid({
               </TableCell>
               
               <TableCell>
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onViewHistory(client.id)}
-                    className="p-0 h-auto text-primary hover:text-primary-hover"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-3 h-3" />
-                      <span className="text-xs">View</span>
-                    </div>
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewHistory(client.id)}
+                  className="p-0 h-auto text-primary hover:text-primary-hover"
+                >
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-3 h-3" />
+                    <span className="text-xs">View</span>
+                  </div>
+                </Button>
               </TableCell>
             
               <TableCell>
