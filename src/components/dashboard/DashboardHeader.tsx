@@ -21,13 +21,14 @@ import {
 } from '@/components/ui/select';
 
 interface DashboardHeaderProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (status: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (status: string) => void;
+  showSearch?: boolean;
 }
 
-export function DashboardHeader({ searchQuery, onSearchChange, statusFilter, onStatusFilterChange }: DashboardHeaderProps) {
+export function DashboardHeader({ searchQuery = '', onSearchChange, statusFilter = 'all', onStatusFilterChange, showSearch = true }: DashboardHeaderProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -64,29 +65,33 @@ export function DashboardHeader({ searchQuery, onSearchChange, statusFilter, onS
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search clients..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 w-80"
-            />
-          </div>
-          
-          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-            <SelectTrigger className="w-40">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="green">Green</SelectItem>
-              <SelectItem value="yellow">Yellow</SelectItem>
-              <SelectItem value="red">Red</SelectItem>
-            </SelectContent>
-          </Select>
+          {showSearch && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Search clients..."
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  className="pl-10 w-80"
+                />
+              </div>
+              
+              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                <SelectTrigger className="w-40">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="green">Green</SelectItem>
+                  <SelectItem value="yellow">Yellow</SelectItem>
+                  <SelectItem value="red">Red</SelectItem>
+                </SelectContent>
+              </Select>
+            </>
+          )}
           
           <Button variant="ghost" size="sm" onClick={() => navigate('/clients')} title="Clients">
             <Users className="w-4 h-4" />

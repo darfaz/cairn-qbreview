@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import {
   Table,
   TableBody,
@@ -124,6 +125,7 @@ const ClientHistory = () => {
   if (error || !client) {
     return (
       <div className="min-h-screen bg-background">
+        <DashboardHeader showSearch={false} />
         <div className="container mx-auto px-6 py-8">
           <Button
             variant="ghost"
@@ -145,6 +147,7 @@ const ClientHistory = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <DashboardHeader showSearch={false} />
       <div className="container mx-auto px-6 py-8">
         <Button
           variant="ghost"
