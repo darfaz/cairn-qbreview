@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { addQBOClient } from '@/lib/database/clients';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ConnectQBOButton } from './qbo/ConnectQBOButton';
 
 export function AddClientForm({ onSuccess }: { onSuccess?: () => void }) {
   const [realmId, setRealmId] = useState('');
@@ -14,6 +15,8 @@ export function AddClientForm({ onSuccess }: { onSuccess?: () => void }) {
   const [dropboxFolderPath, setDropboxFolderPath] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showQBOConnect, setShowQBOConnect] = useState(false);
+  const [createdClientId, setCreatedClientId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,17 +48,21 @@ export function AddClientForm({ onSuccess }: { onSuccess?: () => void }) {
           variant: result.action === 'updated' ? 'default' : 'default',
         });
         
-        // Clear form only if it was a new client
-        if (result.action === 'created') {
+        // Show QBO connect step for new clients
+        if (result.action === 'created' && result.data) {
+          setCreatedClientId(result.data.id);
+          setShowQBOConnect(true);
+        } else {
+          // Clear form for updates
           setRealmId('');
           setClientName('');
           setDropboxFolderUrl('');
           setDropboxFolderPath('');
-        }
-        
-        // Call success callback
-        if (onSuccess) {
-          onSuccess();
+          
+          // Call success callback
+          if (onSuccess) {
+            onSuccess();
+          }
         }
       } else {
         setError(result.error || 'Failed to add client');
@@ -66,6 +73,58 @@ export function AddClientForm({ onSuccess }: { onSuccess?: () => void }) {
       setIsLoading(false);
     }
   };
+
+  const handleQBOConnectSuccess = () => {
+    // Clear form and call success callback
+    setRealmId('');
+    setClientName('');
+    setDropboxFolderUrl('');
+    setDropboxFolderPath('');
+    setShowQBOConnect(false);
+    setCreatedClientId(null);
+    
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+
+  const handleSkipQBO = () => {
+    // Clear form and call success callback
+    setRealmId('');
+    setClientName('');
+    setDropboxFolderUrl('');
+    setDropboxFolderPath('');
+    setShowQBOConnect(false);
+    setCreatedClientId(null);
+    
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+
+  if (showQBOConnect && createdClientId) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>
+            <strong>Client added successfully!</strong> Now connect to QuickBooks to enable automated reviews.
+          </AlertDescription>
+        </Alert>
+        
+        <div className="flex flex-col gap-4">
+          <ConnectQBOButton
+            clientId={createdClientId}
+            clientName={clientName}
+            realmId={realmId}
+            onSuccess={handleQBOConnectSuccess}
+          />
+          <Button variant="outline" onClick={handleSkipQBO}>
+            Skip for Now
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

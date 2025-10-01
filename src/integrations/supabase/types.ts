@@ -182,6 +182,47 @@ export type Database = {
         }
         Relationships: []
       }
+      qbo_tokens: {
+        Row: {
+          access_token: string
+          client_id: string | null
+          created_at: string
+          id: string
+          realm_id: string
+          refresh_token: string
+          token_expires_at: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          realm_id: string
+          refresh_token: string
+          token_expires_at: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          realm_id?: string
+          refresh_token?: string
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_tokens_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reconciliation_runs: {
         Row: {
           client_id: string
@@ -322,9 +363,21 @@ export type Database = {
         Args: { _key: string; _token: string }
         Returns: string
       }
+      get_qbo_connection_status: {
+        Args: { p_client_id: string }
+        Returns: {
+          expires_at: string
+          is_connected: boolean
+          is_expired: boolean
+        }[]
+      }
       hash_token: {
         Args: { _token: string }
         Returns: string
+      }
+      is_qbo_token_expired: {
+        Args: { token_id: string }
+        Returns: boolean
       }
       log_token_access: {
         Args: { _action: string; _client_id: string; _user_id: string }

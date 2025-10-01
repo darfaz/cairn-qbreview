@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Play, Plus, FileSpreadsheet } from 'lucide-react';
+import { Loader2, Play, Plus, FileSpreadsheet, Link as LinkIcon } from 'lucide-react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { ConnectQBOButton } from '@/components/qbo/ConnectQBOButton';
+import { useNavigate } from 'react-router-dom';
 
 interface QBOClient {
   id: string;
@@ -18,6 +20,7 @@ interface QBOClient {
 }
 
 export default function ClientsPage() {
+  const navigate = useNavigate();
   const [clients, setClients] = useState<QBOClient[]>([]);
   const [runningClients, setRunningClients] = useState<Set<string>>(new Set());
   const [isBatchRunning, setIsBatchRunning] = useState(false);
@@ -164,6 +167,13 @@ export default function ClientsPage() {
             Manage your clients and run reconciliation reviews via n8n integration.
           </p>
           <div className="flex gap-2">
+            <Button
+              onClick={() => navigate('/qbo-connections')}
+              variant="outline"
+            >
+              <LinkIcon className="w-4 h-4 mr-2" />
+              QBO Connections
+            </Button>
             <Button
               onClick={() => setShowAddForm(!showAddForm)}
               variant="outline"

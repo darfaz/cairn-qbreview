@@ -13,6 +13,8 @@ import CompanySelection from "./pages/CompanySelection";
 import CompanyManagement from "./pages/CompanyManagement";
 import Clients from "./pages/Clients";
 import ClientHistory from "./pages/ClientHistory";
+import QBOCallback from "./pages/QBOCallback";
+import QBOConnections from "./pages/QBOConnections";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -57,6 +59,16 @@ const App = () => {
               <Route path="/history/:clientId" element={
                 <ProtectedRoute>
                   <ClientHistory />
+                </ProtectedRoute>
+              } />
+              <Route path="/qbo-callback" element={
+                <ProtectedRoute>
+                  <QBOCallback />
+                </ProtectedRoute>
+              } />
+              <Route path="/qbo-connections" element={
+                <ProtectedRoute>
+                  <QBOConnections />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
