@@ -137,7 +137,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
     setResult(null);
 
     try {
-      // Step 1: Get current user
+      // Get authenticated user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         toast({
@@ -149,48 +149,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
         return;
       }
 
-      // Step 2: Get or create firm
-      let firmId: string;
-      
-      const { data: existingFirm } = await supabase
-        .from('firms')
-        .select('id')
-        .eq('owner_id', user.id)
-        .single();
-
-      if (existingFirm) {
-        firmId = existingFirm.id;
-      } else {
-        // Create firm if doesn't exist
-        const { data: newFirm, error: firmError } = await supabase
-          .from('firms')
-          .insert({ 
-            firm_name: user.email?.split('@')[0] || 'My Firm',
-            owner_id: user.id 
-          })
-          .select('id')
-          .single();
-        
-        if (firmError || !newFirm) {
-          console.error('Failed to create firm:', firmError);
-          toast({
-            title: 'Error',
-            description: 'Failed to create firm',
-            variant: 'destructive',
-          });
-          setIsUploading(false);
-          return;
-        }
-        firmId = newFirm.id;
-      }
-
-      // Step 3: Update profile with firm_id
-      await supabase
-        .from('profiles')
-        .update({ firm_id: firmId })
-        .eq('id', user.id);
-
-      // Step 4: Parse CSV and insert clients
+      // Parse CSV and insert clients
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -225,7 +184,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           const clientsToInsert = validRows.map((row: any) => ({
             client_name: getValue(row, 'Client Name', 'client_name')?.trim(),
             realm_id: getValue(row, 'Realm_ID', 'realm_id')?.trim(),
-            firm_id: firmId,
+            user_id: user.id,
             dropbox_folder_url: getValue(row, 'Dropbox', 'dropbox_folder_url')?.trim(),
             dropbox_folder_path: getValue(row, 'Dropbox to', 'dropbox_folder_path')?.trim(),
           }));

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { addQBOClient } from '@/lib/database/clients';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export function AddClientForm() {
   const [realmId, setRealmId] = useState('');
@@ -19,9 +20,18 @@ export function AddClientForm() {
     setError(null);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('You must be logged in');
+        setIsLoading(false);
+        return;
+      }
+
       const result = await addQBOClient({
         realm_id: realmId.trim(),
         client_name: clientName.trim(),
+        user_id: user.id,
       });
 
       if (result.success) {

@@ -86,18 +86,10 @@ export const runBatchReview = async (options: {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
-      
-      if (!profile?.firm_id) throw new Error('No firm found');
-      
       const { data: clients } = await supabase
         .from('clients')
         .select('id')
-        .eq('firm_id', profile.firm_id);
+        .eq('user_id', user.id);
       
       clientIds = clients?.map(c => c.id) || [];
     }

@@ -39,25 +39,14 @@ const Index = () => {
     try {
       setError(null); // Clear previous errors
       
-      // Get current user's firm_id
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setHasClients(false);
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.firm_id) {
-        setHasClients(false);
-        return;
-      }
-
-      // Fetch clients with their latest review using a more efficient approach
+      // Fetch clients directly for the logged-in user
       const { data, error } = await supabase
         .from('clients')
         .select(`
@@ -66,7 +55,7 @@ const Index = () => {
           realm_id,
           dropbox_folder_url
         `)
-        .eq('firm_id', profile.firm_id)
+        .eq('user_id', user.id)
         .order('client_name');
 
       if (error) throw error;

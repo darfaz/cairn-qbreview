@@ -30,56 +30,29 @@ interface ScheduledRunSettings {
   next_run_date: string | null;
 }
 
-interface FirmInfo {
-  id: string;
-  firm_name: string;
-  owner_id: string;
-}
-
 const Settings = () => {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<ScheduledRunSettings | null>(null);
-  const [firmInfo, setFirmInfo] = useState<FirmInfo | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
   const [clientCount, setClientCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [updatingFirm, setUpdatingFirm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSettings();
-    fetchFirmInfo();
+    fetchUserEmail();
     fetchClientCount();
   }, []);
 
-  const fetchFirmInfo = async () => {
+  const fetchUserEmail = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       setUserEmail(user.email || '');
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.firm_id) {
-        const { data: firm } = await supabase
-          .from('firms')
-          .select('*')
-          .eq('id', profile.firm_id)
-          .single();
-
-        if (firm) {
-          setFirmInfo(firm);
-        }
-      }
     } catch (error) {
-      console.error('Error fetching firm info:', error);
+      console.error('Error fetching user email:', error);
     }
   };
 
@@ -88,20 +61,12 @@ const Settings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
+      const { count } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
-      if (profile?.firm_id) {
-        const { count } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true })
-          .eq('firm_id', profile.firm_id);
-
-        setClientCount(count || 0);
-      }
+      setClientCount(count || 0);
     } catch (error) {
       console.error('Error fetching client count:', error);
     }
@@ -120,51 +85,15 @@ const Settings = () => {
     }, 1500);
   };
 
-  const handleUpdateFirmName = async () => {
-    if (!firmInfo) return;
-
-    setUpdatingFirm(true);
-    try {
-      const { error } = await supabase
-        .from('firms')
-        .update({ firm_name: firmInfo.firm_name })
-        .eq('id', firmInfo.id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Firm Updated',
-        description: 'Firm name has been updated successfully',
-      });
-    } catch (error) {
-      console.error('Error updating firm:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update firm name',
-        variant: 'destructive',
-      });
-    } finally {
-      setUpdatingFirm(false);
-    }
-  };
-
   const handleExportClients = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.firm_id) return;
-
       const { data: clients, error } = await supabase
         .from('clients')
         .select('client_name, realm_id, dropbox_folder_url, dropbox_folder_path')
-        .eq('firm_id', profile.firm_id)
+        .eq('user_id', user.id)
         .order('client_name');
 
       if (error) throw error;
@@ -231,18 +160,10 @@ const Settings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('firm_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.firm_id) return;
-
       const { error } = await supabase
         .from('clients')
         .delete()
-        .eq('firm_id', profile.firm_id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -402,25 +323,15 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                Firm Information
+                Account Information
               </CardTitle>
               <CardDescription>
-                Manage your firm details and account information
+                Your account details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="firmName">Firm Name</Label>
-                <Input
-                  id="firmName"
-                  value={firmInfo?.firm_name || ''}
-                  onChange={(e) => setFirmInfo(firmInfo ? { ...firmInfo, firm_name: e.target.value } : null)}
-                  placeholder="Enter firm name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ownerEmail">Owner Email</Label>
+                <Label htmlFor="ownerEmail">Email</Label>
                 <Input
                   id="ownerEmail"
                   value={userEmail}
@@ -428,16 +339,10 @@ const Settings = () => {
                   disabled
                   className="bg-muted"
                 />
+                <p className="text-sm text-muted-foreground">
+                  Logged in as {userEmail}. {clientCount} clients connected.
+                </p>
               </div>
-
-              <Button 
-                onClick={handleUpdateFirmName}
-                disabled={updatingFirm || !firmInfo}
-              >
-                {updatingFirm && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                <Save className="h-4 w-4 mr-2" />
-                Update Firm Name
-              </Button>
             </CardContent>
           </Card>
 

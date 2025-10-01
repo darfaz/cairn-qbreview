@@ -20,39 +20,39 @@ export type Database = {
           error_details: Json | null
           failed_rows: number
           file_name: string
-          firm_id: string
           id: string
           successful_rows: number
           total_rows: number
           updated_at: string | null
           uploaded_at: string | null
           uploaded_by: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           error_details?: Json | null
           failed_rows?: number
           file_name: string
-          firm_id: string
           id?: string
           successful_rows?: number
           total_rows?: number
           updated_at?: string | null
           uploaded_at?: string | null
           uploaded_by: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           error_details?: Json | null
           failed_rows?: number
           file_name?: string
-          firm_id?: string
           id?: string
           successful_rows?: number
           total_rows?: number
           updated_at?: string | null
           uploaded_at?: string | null
           uploaded_by?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -62,7 +62,6 @@ export type Database = {
           created_at: string
           dropbox_folder_path: string | null
           dropbox_folder_url: string | null
-          firm_id: string
           id: string
           realm_id: string
           updated_at: string
@@ -73,7 +72,6 @@ export type Database = {
           created_at?: string
           dropbox_folder_path?: string | null
           dropbox_folder_url?: string | null
-          firm_id: string
           id?: string
           realm_id: string
           updated_at?: string
@@ -84,96 +82,10 @@ export type Database = {
           created_at?: string
           dropbox_folder_path?: string | null
           dropbox_folder_url?: string | null
-          firm_id?: string
           id?: string
           realm_id?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clients_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      firm_integrations: {
-        Row: {
-          configured_at: string | null
-          configured_by: string | null
-          created_at: string | null
-          firm_id: string | null
-          id: string
-          intuit_app_name: string | null
-          intuit_client_id: string | null
-          intuit_client_secret_encrypted: string | null
-          intuit_environment: string | null
-          is_configured: boolean | null
-          redirect_uri: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          configured_at?: string | null
-          configured_by?: string | null
-          created_at?: string | null
-          firm_id?: string | null
-          id?: string
-          intuit_app_name?: string | null
-          intuit_client_id?: string | null
-          intuit_client_secret_encrypted?: string | null
-          intuit_environment?: string | null
-          is_configured?: boolean | null
-          redirect_uri?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          configured_at?: string | null
-          configured_by?: string | null
-          created_at?: string | null
-          firm_id?: string | null
-          id?: string
-          intuit_app_name?: string | null
-          intuit_client_id?: string | null
-          intuit_client_secret_encrypted?: string | null
-          intuit_environment?: string | null
-          is_configured?: boolean | null
-          redirect_uri?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "firm_integrations_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: true
-            referencedRelation: "firms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      firms: {
-        Row: {
-          created_at: string
-          firm_name: string
-          id: string
-          owner_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          firm_name: string
-          id?: string
-          owner_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          firm_name?: string
-          id?: string
-          owner_id?: string | null
-          updated_at?: string
         }
         Relationships: []
       }
@@ -244,7 +156,6 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
-          firm_id: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -254,7 +165,6 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
-          firm_id?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -264,22 +174,13 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
-          firm_id?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           role?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_firm_id_fkey"
-            columns: ["firm_id"]
-            isOneToOne: false
-            referencedRelation: "firms"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       qbo_connections: {
         Row: {

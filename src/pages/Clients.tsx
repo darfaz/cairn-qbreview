@@ -72,23 +72,10 @@ export default function ClientsPage() {
   const addClient = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Get the user's firm ID from their profile
+    // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error('You must be logged in');
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('firm_id')
-      .eq('id', user.id)
-      .single();
-    
-    const firmId = profile?.firm_id;
-    
-    if (!firmId) {
-      toast.error('No firm found. Please contact support.');
       return;
     }
 
@@ -96,7 +83,7 @@ export default function ClientsPage() {
       .from('clients')
       .insert({
         ...newClient,
-        firm_id: firmId
+        user_id: user.id
       });
 
     if (error) {

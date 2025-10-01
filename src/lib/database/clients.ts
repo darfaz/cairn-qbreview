@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export async function addQBOClient(clientData: {
   realm_id: string;
   client_name: string;
-  firm_id?: string;
+  user_id: string;
 }) {
   try {
     // First, check if the realm_id already exists
@@ -44,7 +44,7 @@ export async function addQBOClient(clientData: {
         .insert({
           realm_id: clientData.realm_id,
           client_name: clientData.client_name,
-          firm_id: clientData.firm_id,
+          user_id: clientData.user_id,
         })
         .select()
         .single();
