@@ -142,7 +142,7 @@ export function ClientReconciliationTable({ clients, onRefresh }: ClientReconcil
                 Status
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                QBO Connection
+                QuickBooks
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Dropbox

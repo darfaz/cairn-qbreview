@@ -68,28 +68,84 @@ export async function checkQBOConnection(realmId: string): Promise<{
   expiresAt?: string;
 }> {
   try {
-    const { data, error } = await supabase
-      .from('qbo_tokens')
-      .select('token_expires_at')
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // First get the client for this realm_id
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id')
       .eq('realm_id', realmId)
-      .maybeSingle();
+      .eq('user_id', user.id)
+      .single();
 
-    if (error) throw error;
-
-    if (!data) {
+    if (!client) {
       return { isConnected: false, isExpired: false };
     }
 
-    const isExpired = new Date(data.token_expires_at) < new Date();
-    
+    // Then check for tokens
+    const { data: token } = await supabase
+      .from('qbo_tokens')
+      .select('token_expires_at')
+      .eq('realm_id', realmId)
+      .single();
+
+    if (!token) {
+      return { isConnected: false, isExpired: false };
+    }
+
+    const isExpired = new Date(token.token_expires_at) < new Date();
     return {
       isConnected: true,
       isExpired,
-      expiresAt: data.token_expires_at
+      expiresAt: token.token_expires_at,
     };
   } catch (error) {
-    console.error('Failed to check QBO connection:', error);
+    console.error('Error checking QBO connection:', error);
     return { isConnected: false, isExpired: false };
+  }
+}
+
+/**
+ * Helper function to check connection status for a client ID
+ */
+export async function checkClientQBOConnection(clientId: string): Promise<'connected' | 'disconnected'> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return 'disconnected';
+    }
+
+    // Get client's realm_id
+    const { data: client } = await supabase
+      .from('clients')
+      .select('realm_id')
+      .eq('id', clientId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (!client) {
+      return 'disconnected';
+    }
+
+    // Check for valid token
+    const { data: token } = await supabase
+      .from('qbo_tokens')
+      .select('token_expires_at')
+      .eq('realm_id', client.realm_id)
+      .single();
+
+    if (!token) {
+      return 'disconnected';
+    }
+
+    const isExpired = new Date(token.token_expires_at) < new Date();
+    return isExpired ? 'disconnected' : 'connected';
+  } catch (error) {
+    console.error('Error checking client QBO connection:', error);
+    return 'disconnected';
   }
 }
 

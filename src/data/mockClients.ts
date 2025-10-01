@@ -35,7 +35,7 @@ export const mockClients: Client[] = [
     lastReviewDate: new Date('2024-01-12'),
     status: 'red',
     actionItemsCount: 7,
-    connectionStatus: 'needs_reconnect',
+    connectionStatus: 'disconnected',
     dropboxFolderUrl: 'https://dropbox.com/sh/global-tech',
     createdAt: new Date('2023-04-20'),
     updatedAt: new Date('2024-01-12'),
@@ -94,7 +94,7 @@ export const generateMockClients = (count: number = 100): Client[] => {
   for (let i = 7; i <= count; i++) {
     const name = `${baseNames[i % baseNames.length]} ${Math.floor(i / baseNames.length) + 1}`;
     const statuses: ('green' | 'yellow' | 'red')[] = ['green', 'yellow', 'red'];
-    const connectionStatuses: ('connected' | 'disconnected' | 'needs_reconnect')[] = ['connected', 'disconnected', 'needs_reconnect'];
+    const connectionStatuses: ('connected' | 'disconnected')[] = ['connected', 'disconnected'];
     
     const status = statuses[Math.floor(Math.random() * 3)];
     const actionItems = status === 'green' ? 0 : status === 'yellow' ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 10) + 4;
@@ -107,7 +107,7 @@ export const generateMockClients = (count: number = 100): Client[] => {
       lastReviewDate: new Date(2024, 0, Math.floor(Math.random() * 15) + 1),
       status,
       actionItemsCount: actionItems,
-      connectionStatus: connectionStatuses[Math.floor(Math.random() * 3)],
+      connectionStatus: connectionStatuses[Math.floor(Math.random() * 2)],
       dropboxFolderUrl: Math.random() > 0.3 ? `https://dropbox.com/sh/${name.toLowerCase().replace(/\s+/g, '-')}` : undefined,
       createdAt: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1),
       updatedAt: new Date(2024, 0, Math.floor(Math.random() * 15) + 1),

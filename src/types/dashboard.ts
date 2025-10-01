@@ -6,7 +6,7 @@ export interface Client {
   lastReviewDate: Date;
   status: 'green' | 'yellow' | 'red';
   actionItemsCount: number;
-  connectionStatus: 'connected' | 'disconnected' | 'needs_reconnect';
+  connectionStatus: 'connected' | 'disconnected';
   dropboxFolderUrl?: string;
   createdAt: Date;
   updatedAt: Date;

@@ -21,6 +21,7 @@ interface ClientWithReview {
   last_review_date: string | null;
   review_status: string | null;
   action_items_count: number | null;
+  connection_status: 'connected' | 'disconnected';
 }
 
 const Index = () => {
@@ -77,6 +78,20 @@ const Index = () => {
         .in('client_id', clientIds)
         .order('triggered_at', { ascending: false });
 
+      // Fetch QBO tokens to check connection status
+      const realmIds = data.map(c => c.realm_id);
+      const { data: tokens } = await supabase
+        .from('qbo_tokens')
+        .select('realm_id, token_expires_at')
+        .in('realm_id', realmIds);
+
+      // Create a map of realm_id to connection status
+      const connectionStatusMap = new Map();
+      tokens?.forEach(token => {
+        const isExpired = new Date(token.token_expires_at) < new Date();
+        connectionStatusMap.set(token.realm_id, isExpired ? 'disconnected' : 'connected');
+      });
+
       // Group reviews by client_id and get the latest one
       const latestReviewsByClient = new Map();
       reviews?.forEach(review => {
@@ -85,9 +100,10 @@ const Index = () => {
         }
       });
 
-      // Map clients with their latest review
+      // Map clients with their latest review and connection status
       const clientsWithReviews: ClientWithReview[] = data.map((client) => {
         const latestReview = latestReviewsByClient.get(client.id);
+        const connectionStatus = connectionStatusMap.get(client.realm_id) || 'disconnected';
         
         return {
           id: client.id,
@@ -97,6 +113,7 @@ const Index = () => {
           last_review_date: latestReview?.triggered_at || null,
           review_status: latestReview?.status || null,
           action_items_count: latestReview?.action_items_count ?? null,
+          connection_status: connectionStatus,
         };
       });
 
@@ -129,7 +146,7 @@ const Index = () => {
       lastReviewDate: client.last_review_date ? new Date(client.last_review_date) : new Date(),
       status: getStatusFromActionItems(client.action_items_count),
       actionItemsCount: client.action_items_count ?? 0,
-      connectionStatus: client.review_status === 'failed' ? 'needs_reconnect' : 'connected',
+      connectionStatus: client.connection_status,
       dropboxFolderUrl: client.dropbox_folder_url || undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
