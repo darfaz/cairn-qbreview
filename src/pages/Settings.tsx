@@ -99,7 +99,7 @@ const Settings = () => {
       if (error) throw error;
 
       // Convert to CSV
-      const headers = ['Client Name', 'Realm_ID', 'Dropbox', 'Dropbox to'];
+      const headers = ['client_name', 'realm_id', 'dropbox_folder_url', 'dropbox_folder_path'];
       const rows = clients?.map(c => [
         c.client_name,
         c.realm_id,
@@ -137,7 +137,7 @@ const Settings = () => {
 
   const handleDownloadTemplate = () => {
     const template = [
-      'Client Name,Realm_ID,Dropbox,Dropbox to',
+      'client_name,realm_id,dropbox_folder_url,dropbox_folder_path',
       'Example Corp,9340000000000000,https://www.dropbox.com/scl/fo/example,/Clients/Example/'
     ].join('\n');
 

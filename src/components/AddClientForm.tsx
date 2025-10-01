@@ -7,9 +7,11 @@ import { addQBOClient } from '@/lib/database/clients';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-export function AddClientForm() {
+export function AddClientForm({ onSuccess }: { onSuccess?: () => void }) {
   const [realmId, setRealmId] = useState('');
   const [clientName, setClientName] = useState('');
+  const [dropboxFolderUrl, setDropboxFolderUrl] = useState('');
+  const [dropboxFolderPath, setDropboxFolderPath] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -31,6 +33,8 @@ export function AddClientForm() {
       const result = await addQBOClient({
         realm_id: realmId.trim(),
         client_name: clientName.trim(),
+        dropbox_folder_url: dropboxFolderUrl.trim(),
+        dropbox_folder_path: dropboxFolderPath.trim(),
         user_id: user.id,
       });
 
@@ -45,6 +49,13 @@ export function AddClientForm() {
         if (result.action === 'created') {
           setRealmId('');
           setClientName('');
+          setDropboxFolderUrl('');
+          setDropboxFolderPath('');
+        }
+        
+        // Call success callback
+        if (onSuccess) {
+          onSuccess();
         }
       } else {
         setError(result.error || 'Failed to add client');
@@ -79,6 +90,32 @@ export function AddClientForm() {
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
           placeholder="e.g., Sample Company LLC"
+          required
+          disabled={isLoading}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="dropbox_folder_url">Dropbox Folder URL</Label>
+        <Input
+          id="dropbox_folder_url"
+          type="url"
+          value={dropboxFolderUrl}
+          onChange={(e) => setDropboxFolderUrl(e.target.value)}
+          placeholder="https://www.dropbox.com/scl/fo/..."
+          required
+          disabled={isLoading}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="dropbox_folder_path">Dropbox Folder Path</Label>
+        <Input
+          id="dropbox_folder_path"
+          type="text"
+          value={dropboxFolderPath}
+          onChange={(e) => setDropboxFolderPath(e.target.value)}
+          placeholder="/Cairn Automation/Client Name"
           required
           disabled={isLoading}
         />

@@ -7,7 +7,9 @@ import { ClientGrid } from '@/components/dashboard/ClientGrid';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Building2, Search, Plus } from 'lucide-react';
+import { AddClientForm } from '@/components/AddClientForm';
 import { Client, DashboardSummary } from '@/types/dashboard';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,6 +32,7 @@ const Index = () => {
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -215,11 +218,7 @@ const Index = () => {
   };
 
   const handleViewHistory = (clientId: string) => {
-    toast({
-      title: 'View History',
-      description: 'Opening review history for this client.',
-    });
-    // TODO: Implement history view
+    navigate(`/history/${clientId}`);
   };
 
   const handleReconnect = (clientId: string) => {
@@ -335,6 +334,32 @@ const Index = () => {
             totalClients={filteredClients.length}
             allClientIds={filteredClients.map(c => c.id)}
           />
+        </div>
+
+        {/* Add Client Button */}
+        <div className="mb-8">
+          <Dialog open={isAddClientOpen} onOpenChange={setIsAddClientOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto" size="lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Client
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add New Client</DialogTitle>
+                <DialogDescription>
+                  Enter the client details to add them to your dashboard
+                </DialogDescription>
+              </DialogHeader>
+              <AddClientForm 
+                onSuccess={() => {
+                  setIsAddClientOpen(false);
+                  fetchClients();
+                }}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Client Grid */}

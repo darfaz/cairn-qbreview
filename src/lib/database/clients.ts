@@ -4,6 +4,8 @@ export async function addQBOClient(clientData: {
   realm_id: string;
   client_name: string;
   user_id: string;
+  dropbox_folder_url: string;
+  dropbox_folder_path: string;
 }) {
   try {
     // First, check if the realm_id already exists
@@ -23,6 +25,8 @@ export async function addQBOClient(clientData: {
         .from('clients')
         .update({
           client_name: clientData.client_name,
+          dropbox_folder_url: clientData.dropbox_folder_url,
+          dropbox_folder_path: clientData.dropbox_folder_path,
           updated_at: new Date().toISOString(),
         })
         .eq('realm_id', clientData.realm_id)
@@ -45,6 +49,8 @@ export async function addQBOClient(clientData: {
           realm_id: clientData.realm_id,
           client_name: clientData.client_name,
           user_id: clientData.user_id,
+          dropbox_folder_url: clientData.dropbox_folder_url,
+          dropbox_folder_path: clientData.dropbox_folder_path,
         })
         .select()
         .single();

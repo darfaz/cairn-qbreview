@@ -10,10 +10,10 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from 'luci
 import { z } from 'zod';
 
 interface CSVRow {
-  'Client Name': string;
-  'Realm_ID': string;
-  'Dropbox'?: string;
-  'Dropbox to'?: string;
+  'client_name': string;
+  'realm_id': string;
+  'dropbox_folder_url': string;
+  'dropbox_folder_path': string;
 }
 
 interface ValidationError {
@@ -32,7 +32,7 @@ const clientRowSchema = z.object({
   client_name: z.string().trim().min(1, 'Client Name is required').max(255, 'Client Name too long'),
   realm_id: z.string().trim().min(1, 'Realm ID is required').max(50, 'Realm ID too long'),
   dropbox_folder_url: z.string().trim().min(1, 'Dropbox folder URL is required').url('Must be a valid URL'),
-  dropbox_folder_path: z.string().optional(),
+  dropbox_folder_path: z.string().trim().min(1, 'Dropbox folder path is required'),
 });
 
 export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void }) {
@@ -65,30 +65,30 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
     const errors: ValidationError[] = [];
     
     // Check required fields
-    if (!row['Client Name'] || row['Client Name'].trim() === '') {
+    if (!row['client_name'] || row['client_name'].trim() === '') {
       errors.push({
         row: rowIndex,
-        message: 'Missing Client Name',
+        message: 'Missing client_name',
         type: 'error'
       });
     }
     
-    if (!row['Realm_ID'] || row['Realm_ID'].trim() === '') {
+    if (!row['realm_id'] || row['realm_id'].trim() === '') {
       errors.push({
         row: rowIndex,
-        message: 'Missing Realm ID',
+        message: 'Missing realm_id',
         type: 'error'
       });
     }
     
     // Require Dropbox folder URL
-    if (!row['Dropbox'] || row['Dropbox'].trim() === '') {
+    if (!row['dropbox_folder_url'] || row['dropbox_folder_url'].trim() === '') {
       errors.push({
         row: rowIndex,
-        message: 'Missing Dropbox folder URL (required)',
+        message: 'Missing dropbox_folder_url (required)',
         type: 'error'
       });
-    } else if (!row['Dropbox'].startsWith('https://www.dropbox.com/')) {
+    } else if (!row['dropbox_folder_url'].startsWith('https://www.dropbox.com/')) {
       errors.push({
         row: rowIndex,
         message: 'Dropbox URL must start with "https://www.dropbox.com/"',
@@ -96,12 +96,18 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
       });
     }
     
-    // Validate Dropbox path format (warning only)
-    if (row['Dropbox to'] && !row['Dropbox to'].startsWith('/')) {
+    // Require Dropbox folder path
+    if (!row['dropbox_folder_path'] || row['dropbox_folder_path'].trim() === '') {
       errors.push({
         row: rowIndex,
-        message: 'Dropbox path should start with "/"',
-        type: 'warning'
+        message: 'Missing dropbox_folder_path (required)',
+        type: 'error'
+      });
+    } else if (!row['dropbox_folder_path'].startsWith('/')) {
+      errors.push({
+        row: rowIndex,
+        message: 'Dropbox path must start with "/"',
+        type: 'error'
       });
     }
     
@@ -165,10 +171,11 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           };
 
           const validRows = results.data.filter((row: any) => {
-            const clientName = getValue(row, 'Client Name', 'client_name');
-            const realmId = getValue(row, 'Realm_ID', 'realm_id');
-            const dropbox = getValue(row, 'Dropbox', 'dropbox_folder_url');
-            return clientName && realmId && dropbox;
+            const clientName = getValue(row, 'client_name');
+            const realmId = getValue(row, 'realm_id');
+            const dropboxUrl = getValue(row, 'dropbox_folder_url');
+            const dropboxPath = getValue(row, 'dropbox_folder_path');
+            return clientName && realmId && dropboxUrl && dropboxPath;
           });
 
           if (validRows.length === 0) {
@@ -182,11 +189,11 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           }
 
           const clientsToInsert = validRows.map((row: any) => ({
-            client_name: getValue(row, 'Client Name', 'client_name')?.trim(),
-            realm_id: getValue(row, 'Realm_ID', 'realm_id')?.trim(),
+            client_name: getValue(row, 'client_name')?.trim(),
+            realm_id: getValue(row, 'realm_id')?.trim(),
             user_id: user.id,
-            dropbox_folder_url: getValue(row, 'Dropbox', 'dropbox_folder_url')?.trim(),
-            dropbox_folder_path: getValue(row, 'Dropbox to', 'dropbox_folder_path')?.trim(),
+            dropbox_folder_url: getValue(row, 'dropbox_folder_url')?.trim(),
+            dropbox_folder_path: getValue(row, 'dropbox_folder_path')?.trim(),
           }));
 
           const { data, error } = await supabase
@@ -319,10 +326,10 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           <AlertDescription>
             <p className="font-medium mb-2">Required CSV columns:</p>
             <ul className="text-sm space-y-1 ml-4 list-disc">
-              <li><strong>Client Name</strong> or <strong>client_name</strong> - Name of the client (required)</li>
-              <li><strong>Realm_ID</strong> or <strong>realm_id</strong> - Realm ID (required, must be unique)</li>
-              <li><strong>Dropbox</strong> or <strong>dropbox_folder_url</strong> - Dropbox folder URL (required)</li>
-              <li><strong>Dropbox to</strong> or <strong>dropbox_folder_path</strong> - Dropbox folder path (optional)</li>
+              <li><strong>client_name</strong> - Name of the client (required)</li>
+              <li><strong>realm_id</strong> - QuickBooks Realm ID (required, must be unique)</li>
+              <li><strong>dropbox_folder_url</strong> - Dropbox folder shareable URL (required)</li>
+              <li><strong>dropbox_folder_path</strong> - Dropbox folder path starting with / (required)</li>
             </ul>
           </AlertDescription>
         </Alert>
