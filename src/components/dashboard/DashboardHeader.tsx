@@ -1,4 +1,4 @@
-import { Search, Settings, UserCircle, Bell, LogOut, Users } from 'lucide-react';
+import { Search, Settings, UserCircle, Bell, LogOut, Users, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -12,13 +12,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface DashboardHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  statusFilter: string;
+  onStatusFilterChange: (status: string) => void;
 }
 
-export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeaderProps) {
+export function DashboardHeader({ searchQuery, onSearchChange, statusFilter, onStatusFilterChange }: DashboardHeaderProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -65,6 +74,19 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
               className="pl-10 w-80"
             />
           </div>
+          
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger className="w-40">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="green">Green</SelectItem>
+              <SelectItem value="yellow">Yellow</SelectItem>
+              <SelectItem value="red">Red</SelectItem>
+            </SelectContent>
+          </Select>
           
           <Button variant="ghost" size="sm" onClick={() => navigate('/clients')} title="Clients">
             <Users className="w-4 h-4" />

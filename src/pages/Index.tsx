@@ -29,6 +29,7 @@ const Index = () => {
   const [clients, setClients] = useState<ClientWithReview[]>([]);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchClients();
@@ -143,15 +144,27 @@ const Index = () => {
     }));
   }, [clients]);
 
-  // Filter clients based on search query
+  // Filter clients based on search query and status
   const filteredClients = useMemo(() => {
-    if (!searchQuery) return displayClients;
+    let filtered = displayClients;
     
-    return displayClients.filter(client =>
-      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.realmId.includes(searchQuery)
-    );
-  }, [displayClients, searchQuery]);
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(client => client.status === statusFilter);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(client => 
+        client.name.toLowerCase().includes(query) ||
+        client.realmId.toLowerCase().includes(query) ||
+        client.qboCompanyName.toLowerCase().includes(query)
+      );
+    }
+    
+    return filtered;
+  }, [displayClients, searchQuery, statusFilter]);
 
   // Calculate summary statistics
   const summary: DashboardSummary = useMemo(() => {
@@ -233,7 +246,7 @@ const Index = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-background">
-        <DashboardHeader searchQuery="" onSearchChange={() => {}} />
+        <DashboardHeader searchQuery="" onSearchChange={() => {}} statusFilter="all" onStatusFilterChange={() => {}} />
         <main className="container mx-auto px-6 py-8">
           <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
             <p className="font-semibold">Error loading dashboard</p>
@@ -270,6 +283,8 @@ const Index = () => {
         <DashboardHeader
           searchQuery=""
           onSearchChange={() => {}}
+          statusFilter="all"
+          onStatusFilterChange={() => {}}
         />
         
         <main className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
@@ -295,6 +310,8 @@ const Index = () => {
       <DashboardHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
       />
       
       <main className="container mx-auto px-6 py-8">
