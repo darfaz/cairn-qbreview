@@ -166,7 +166,7 @@ export default function ClientsPage() {
             </div>
             <div>
               <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
-              <p className="text-sm text-muted-foreground">QuickBooks Reconciliation Dashboard</p>
+              <p className="text-sm text-muted-foreground">Client Review Dashboard</p>
             </div>
           </button>
         </div>
@@ -175,7 +175,7 @@ export default function ClientsPage() {
       <main className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-6">
           <p className="text-muted-foreground">
-            Manage your QuickBooks clients and run reconciliation reviews via webhook integration.
+            Manage your clients and run reconciliation reviews via n8n integration.
           </p>
           <div className="flex gap-2">
             <Button
@@ -215,7 +215,7 @@ export default function ClientsPage() {
                   required
                 />
                 <Input
-                  placeholder="QuickBooks Realm ID"
+                  placeholder="Realm ID"
                   value={newClient.realm_id}
                   onChange={(e) => setNewClient({...newClient, realm_id: e.target.value})}
                   required
@@ -234,7 +234,7 @@ export default function ClientsPage() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <h3 className="text-lg font-semibold mb-2">No clients found</h3>
-              <p className="text-muted-foreground mb-4">Add your first QuickBooks client to get started.</p>
+              <p className="text-muted-foreground mb-4">Add your first client to get started.</p>
               <Button onClick={() => setShowAddForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Client

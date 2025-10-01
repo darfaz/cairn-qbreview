@@ -99,7 +99,7 @@ export function ClientGrid({
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Client Reconciliations</h2>
         <p className="text-sm text-muted-foreground">
-          Monitor and manage QuickBooks reconciliation status for all clients
+          Monitor and manage reconciliation status for all clients
         </p>
       </div>
 

@@ -185,7 +185,7 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl">Cairn Accounting</CardTitle>
           <CardDescription>
-            QuickBooks Reconciliation Dashboard
+            Client Review Dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>

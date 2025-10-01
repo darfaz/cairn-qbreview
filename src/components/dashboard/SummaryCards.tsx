@@ -27,7 +27,7 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
         <CardContent>
           <div className="text-2xl font-bold">{summary.totalClients}</div>
           <p className="text-xs text-muted-foreground">
-            Active QuickBooks connections
+            Active client connections
           </p>
         </CardContent>
       </Card>

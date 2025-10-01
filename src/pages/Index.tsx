@@ -224,8 +224,8 @@ const Index = () => {
 
   const handleReconnect = (clientId: string) => {
     toast({
-      title: 'Reconnection Required',
-      description: 'Please reconnect this QuickBooks client.',
+      title: 'Review Required',
+      description: 'Please review this client.',
     });
     // TODO: Implement reconnection logic
   };
@@ -283,7 +283,7 @@ const Index = () => {
             </div>
             <h2 className="text-2xl font-semibold">Welcome to Cairn Accounting</h2>
             <p className="text-muted-foreground">
-              Get started by adding your first QuickBooks client to begin automated reconciliation reviews.
+              Get started by adding your first client to begin automated reconciliation reviews.
             </p>
             <Button onClick={() => navigate('/clients')} size="lg">
               Add Your First Client
@@ -307,7 +307,7 @@ const Index = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Client Reconciliations</h1>
           <p className="text-muted-foreground">
-            Monitor and manage QuickBooks reconciliation status for all clients
+            Monitor and manage reconciliation status for all clients
           </p>
         </div>
 

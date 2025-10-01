@@ -320,7 +320,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
             <p className="font-medium mb-2">Required CSV columns:</p>
             <ul className="text-sm space-y-1 ml-4 list-disc">
               <li><strong>Client Name</strong> or <strong>client_name</strong> - Name of the client (required)</li>
-              <li><strong>Realm_ID</strong> or <strong>realm_id</strong> - QuickBooks Realm ID (required, must be unique)</li>
+              <li><strong>Realm_ID</strong> or <strong>realm_id</strong> - Realm ID (required, must be unique)</li>
               <li><strong>Dropbox</strong> or <strong>dropbox_folder_url</strong> - Dropbox folder URL (required)</li>
               <li><strong>Dropbox to</strong> or <strong>dropbox_folder_path</strong> - Dropbox folder path (optional)</li>
             </ul>

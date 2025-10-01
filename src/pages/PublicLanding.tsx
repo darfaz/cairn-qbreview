@@ -78,15 +78,15 @@ const PublicLanding = () => {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">
-            Automated QuickBooks Reconciliation Reviews
+            Automated Reconciliation Reviews
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Streamline your accounting workflow with automated reconciliation reviews, 
-            real-time status tracking, and seamless QuickBooks integration.
+            real-time status tracking, and seamless integration.
           </p>
           <div className="bg-muted/50 p-4 rounded-lg mb-8">
             <p className="text-sm text-muted-foreground">
-              👆 This is a live demo. Sign up to connect your own QuickBooks clients.
+              👆 This is a live demo. Sign up to connect your own clients.
             </p>
           </div>
         </div>
@@ -131,7 +131,7 @@ const PublicLanding = () => {
         <div className="mt-16 text-center bg-muted/30 rounded-lg p-8">
           <h2 className="text-2xl font-semibold mb-4">Ready to get started?</h2>
           <p className="text-muted-foreground mb-6">
-            Connect your QuickBooks clients and start automating your reconciliation reviews today.
+            Connect your clients and start automating your reconciliation reviews today.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button size="lg" onClick={() => navigate('/auth')}>

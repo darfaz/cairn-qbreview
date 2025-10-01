@@ -55,28 +55,20 @@ const CompanyManagement = () => {
         .select(`
           id,
           client_name,
-          realm_id,
-          qbo_connections (
-            connection_status,
-            token_expires_at
-          )
+          realm_id
         `);
 
       if (error) throw error;
 
       const mappedCompanies: ConnectedCompany[] = clients?.map(client => {
-        const qboConnection = Array.isArray(client.qbo_connections) ? client.qbo_connections[0] : client.qbo_connections;
-        const connectionStatus = qboConnection?.connection_status || 'disconnected';
-        
         return {
           id: client.id,
           name: client.client_name,
           realmId: client.realm_id,
-          connectionStatus: connectionStatus as ConnectedCompany['connectionStatus'],
-          status: getStatusColor(connectionStatus, qboConnection?.token_expires_at),
-          lastSyncAt: undefined, // Not available in new schema
-          tokenExpiresAt: qboConnection?.token_expires_at ? 
-            new Date(qboConnection.token_expires_at) : undefined
+          connectionStatus: 'connected' as ConnectedCompany['connectionStatus'],
+          status: 'green' as ConnectedCompany['status'],
+          lastSyncAt: undefined,
+          tokenExpiresAt: undefined
         };
       }) || [];
 
@@ -105,7 +97,7 @@ const CompanyManagement = () => {
   };
 
   const handleReconnect = async (companyId: string, realmId: string) => {
-    toast.error('Webhook Integration Pending - OAuth functionality has been removed');
+    toast.error('Connection managed via n8n integration');
   };
 
   const handleRefreshAll = async () => {
@@ -123,7 +115,7 @@ const CompanyManagement = () => {
   };
 
   const handleDiscoverNew = () => {
-    toast.error('Webhook Integration Pending - OAuth functionality has been removed');
+    window.location.href = '/clients';
   };
 
   if (isLoading) {
@@ -153,7 +145,7 @@ const CompanyManagement = () => {
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
-                <p className="text-sm text-muted-foreground">QuickBooks Reconciliation Dashboard</p>
+                <p className="text-sm text-muted-foreground">Client Review Dashboard</p>
               </div>
             </button>
             <div className="flex gap-2">

@@ -1,8 +1,5 @@
 project_id = "xfswfetxfqhgvpwlhfce"
 
-[functions.quickbooks-callback]
-verify_jwt = false
-
 [functions.run-reconciliation]
 verify_jwt = false
 
@@ -10,12 +7,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.run-batch-review]
-verify_jwt = false
-
-[functions.quickbooks-token-refresh]
-verify_jwt = false
-
-[functions.quickbooks-health-check]
 verify_jwt = false
 
 [functions.trigger-review]

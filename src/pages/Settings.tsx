@@ -306,7 +306,7 @@ const Settings = () => {
             </div>
             <div>
               <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
-              <p className="text-sm text-muted-foreground">QuickBooks Reconciliation Dashboard</p>
+              <p className="text-sm text-muted-foreground">Client Review Dashboard</p>
             </div>
           </button>
         </div>
