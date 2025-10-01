@@ -31,7 +31,7 @@ interface ImportResult {
 const clientRowSchema = z.object({
   client_name: z.string().trim().min(1, 'Client Name is required').max(255, 'Client Name too long'),
   realm_id: z.string().trim().min(1, 'Realm ID is required').max(50, 'Realm ID too long'),
-  dropbox_folder_url: z.string().optional(),
+  dropbox_folder_url: z.string().trim().min(1, 'Dropbox folder URL is required').url('Must be a valid URL'),
   dropbox_folder_path: z.string().optional(),
 });
 
@@ -81,12 +81,18 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
       });
     }
     
-    // Validate Dropbox URL format (warning only)
-    if (row['Dropbox'] && !row['Dropbox'].startsWith('https://www.dropbox.com/')) {
+    // Require Dropbox folder URL
+    if (!row['Dropbox'] || row['Dropbox'].trim() === '') {
       errors.push({
         row: rowIndex,
-        message: 'Dropbox URL should start with "https://www.dropbox.com/"',
-        type: 'warning'
+        message: 'Missing Dropbox folder URL (required)',
+        type: 'error'
+      });
+    } else if (!row['Dropbox'].startsWith('https://www.dropbox.com/')) {
+      errors.push({
+        row: rowIndex,
+        message: 'Dropbox URL must start with "https://www.dropbox.com/"',
+        type: 'error'
       });
     }
     
@@ -190,13 +196,13 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
         skipEmptyLines: true,
         complete: async (results) => {
           const validRows = results.data.filter((row: any) => 
-            row.client_name && row.realm_id
+            row['Client Name'] && row['Realm_ID'] && row['Dropbox']
           );
 
           if (validRows.length === 0) {
             toast({
               title: 'No Valid Data',
-              description: 'No valid rows found in CSV',
+              description: 'No valid rows found in CSV. Check that all required columns are present.',
               variant: 'destructive',
             });
             setIsUploading(false);
@@ -204,10 +210,10 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
           }
 
           const clientsToInsert = validRows.map((row: any) => ({
-            client_name: row.client_name?.trim(),
-            realm_id: row.realm_id?.trim(),
+            client_name: row['Client Name']?.trim(),
+            realm_id: row['Realm_ID']?.trim(),
             firm_id: firmId,
-            dropbox_folder_url: row.dropbox_folder_url?.trim() || null,
+            dropbox_folder_url: row['Dropbox']?.trim(),
           }));
 
           const { data, error } = await supabase
@@ -342,7 +348,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
             <ul className="text-sm space-y-1 ml-4 list-disc">
               <li><strong>Client Name</strong> - Name of the client (required)</li>
               <li><strong>Realm_ID</strong> - QuickBooks Realm ID (required, must be unique)</li>
-              <li><strong>Dropbox</strong> - Dropbox folder URL (optional)</li>
+              <li><strong>Dropbox</strong> - Dropbox folder URL (required)</li>
               <li><strong>Dropbox to</strong> - Dropbox folder path (optional)</li>
             </ul>
           </AlertDescription>
