@@ -28,6 +28,7 @@ const Index = () => {
   const [hasClients, setHasClients] = useState<boolean | null>(null);
   const [clients, setClients] = useState<ClientWithReview[]>([]);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
@@ -35,6 +36,8 @@ const Index = () => {
 
   const fetchClients = async () => {
     try {
+      setError(null); // Clear previous errors
+      
       // Get current user's firm_id
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -108,6 +111,7 @@ const Index = () => {
       setHasClients(true);
     } catch (error) {
       console.error('Error fetching clients:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load clients');
       setHasClients(false);
       setClients([]);
     }
@@ -224,6 +228,31 @@ const Index = () => {
     // TODO: Implement reconnection logic
   };
 
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader searchQuery="" onSearchChange={() => {}} />
+        <main className="container mx-auto px-6 py-8">
+          <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
+            <p className="font-semibold">Error loading dashboard</p>
+            <p className="text-sm">{error}</p>
+            <Button 
+              onClick={() => {
+                setError(null);
+                fetchClients();
+              }} 
+              className="mt-4"
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Show loading state while checking for clients
   if (hasClients === null) {
