@@ -227,6 +227,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
             realm_id: getValue(row, 'Realm_ID', 'realm_id')?.trim(),
             firm_id: firmId,
             dropbox_folder_url: getValue(row, 'Dropbox', 'dropbox_folder_url')?.trim(),
+            dropbox_folder_path: getValue(row, 'Dropbox to', 'dropbox_folder_path')?.trim(),
           }));
 
           const { data, error } = await supabase
