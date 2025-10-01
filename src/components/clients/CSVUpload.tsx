@@ -102,173 +102,10 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
     return errors;
   };
 
-  const processCSV = async (file: File) => {
-    setIsUploading(true);
-    setProgress(0);
-    setResult(null);
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // Get user's firm_id
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: 'Authentication Error',
-        description: 'You must be logged in to upload clients',
-        variant: 'destructive',
-      });
-      setIsUploading(false);
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('firm_id')
-      .eq('id', user.id)
-      .single();
-
-    const firmId = profile?.firm_id;
-    if (!firmId) {
-      toast({
-        title: 'Firm Not Found',
-        description: 'No firm found for your account',
-        variant: 'destructive',
-      });
-      setIsUploading(false);
-      return;
-    }
-
-    Papa.parse<CSVRow>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        const errors: ValidationError[] = [];
-        let successCount = 0;
-        let skippedCount = 0;
-        const totalRows = results.data.length;
-
-        // Validate all rows first
-        const validatedRows = results.data.map((row, index) => {
-          const rowErrors = validateRow(row, index + 2); // +2 for header and 1-based index
-          errors.push(...rowErrors);
-          
-          return {
-            data: row,
-            hasErrors: rowErrors.some(e => e.type === 'error'),
-            index: index + 2
-          };
-        });
-
-        // Process valid rows
-        for (let i = 0; i < validatedRows.length; i++) {
-          const { data: row, hasErrors, index } = validatedRows[i];
-          
-          // Skip rows with errors
-          if (hasErrors) {
-            skippedCount++;
-            setProgress(((i + 1) / totalRows) * 100);
-            continue;
-          }
-
-          try {
-            // Convert realm_id from scientific notation if needed
-            const realmId = convertScientificNotation(row['Realm_ID'].trim());
-            
-            // Check if realm_id already exists
-            const { data: existingClient } = await supabase
-              .from('clients')
-              .select('id')
-              .eq('realm_id', realmId)
-              .single();
-
-            if (existingClient) {
-              errors.push({
-                row: index,
-                message: `Realm ID ${realmId} already exists`,
-                type: 'error'
-              });
-              skippedCount++;
-              setProgress(((i + 1) / totalRows) * 100);
-              continue;
-            }
-
-            // Validate with zod
-            const validatedData = clientRowSchema.parse({
-              client_name: row['Client Name'].trim(),
-              realm_id: realmId,
-              dropbox_folder_url: row['Dropbox']?.trim() || null,
-              dropbox_folder_path: row['Dropbox to']?.trim() || null,
-            });
-
-            // Insert client
-            const { error: insertError } = await supabase
-              .from('clients')
-              .insert({
-                firm_id: firmId,
-                client_name: validatedData.client_name,
-                realm_id: validatedData.realm_id,
-                dropbox_folder_url: validatedData.dropbox_folder_url,
-                dropbox_folder_path: validatedData.dropbox_folder_path,
-              });
-
-            if (insertError) {
-              errors.push({
-                row: index,
-                message: insertError.message,
-                type: 'error'
-              });
-              skippedCount++;
-            } else {
-              successCount++;
-            }
-          } catch (error) {
-            errors.push({
-              row: index,
-              message: error instanceof Error ? error.message : 'Unknown error',
-              type: 'error'
-            });
-            skippedCount++;
-          }
-
-          setProgress(((i + 1) / totalRows) * 100);
-        }
-
-        setResult({
-          success: successCount,
-          skipped: skippedCount,
-          errors: errors
-        });
-
-        if (successCount > 0) {
-          toast({
-            title: 'Upload Complete',
-            description: `${successCount} clients imported successfully`,
-          });
-          
-          // Trigger dashboard refresh
-          if (onUploadComplete) {
-            onUploadComplete();
-          }
-        } else {
-          toast({
-            title: 'Upload Failed',
-            description: 'No clients were imported',
-            variant: 'destructive',
-          });
-        }
-
-        setIsUploading(false);
-      },
-      error: (error) => {
-        toast({
-          title: 'Parse Error',
-          description: error.message,
-          variant: 'destructive',
-        });
-        setIsUploading(false);
-      }
-    });
-  };
-
-  const handleFileSelect = (file: File) => {
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.csv')) {
       toast({
@@ -289,8 +126,145 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
       return;
     }
 
-    processCSV(file);
+    setIsUploading(true);
+    setProgress(0);
+    setResult(null);
+
+    try {
+      // Step 1: Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Not authenticated',
+          variant: 'destructive',
+        });
+        setIsUploading(false);
+        return;
+      }
+
+      // Step 2: Get or create firm
+      let firmId: string;
+      
+      const { data: existingFirm } = await supabase
+        .from('firms')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (existingFirm) {
+        firmId = existingFirm.id;
+      } else {
+        // Create firm if doesn't exist
+        const { data: newFirm, error: firmError } = await supabase
+          .from('firms')
+          .insert({ 
+            firm_name: user.email?.split('@')[0] || 'My Firm',
+            owner_id: user.id 
+          })
+          .select('id')
+          .single();
+        
+        if (firmError || !newFirm) {
+          console.error('Failed to create firm:', firmError);
+          toast({
+            title: 'Error',
+            description: 'Failed to create firm',
+            variant: 'destructive',
+          });
+          setIsUploading(false);
+          return;
+        }
+        firmId = newFirm.id;
+      }
+
+      // Step 3: Update profile with firm_id
+      await supabase
+        .from('profiles')
+        .update({ firm_id: firmId })
+        .eq('id', user.id);
+
+      // Step 4: Parse CSV and insert clients
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          const validRows = results.data.filter((row: any) => 
+            row.client_name && row.realm_id
+          );
+
+          if (validRows.length === 0) {
+            toast({
+              title: 'No Valid Data',
+              description: 'No valid rows found in CSV',
+              variant: 'destructive',
+            });
+            setIsUploading(false);
+            return;
+          }
+
+          const clientsToInsert = validRows.map((row: any) => ({
+            client_name: row.client_name?.trim(),
+            realm_id: row.realm_id?.trim(),
+            firm_id: firmId,
+            dropbox_folder_url: row.dropbox_folder_url?.trim() || null,
+          }));
+
+          const { data, error } = await supabase
+            .from('clients')
+            .insert(clientsToInsert)
+            .select();
+
+          if (error) {
+            console.error('Insert error:', error);
+            toast({
+              title: 'Upload Failed',
+              description: `Failed to upload: ${error.message}`,
+              variant: 'destructive',
+            });
+            setResult({
+              success: 0,
+              skipped: validRows.length,
+              errors: [{ row: 0, message: error.message, type: 'error' }]
+            });
+          } else {
+            toast({
+              title: 'Upload Complete',
+              description: `Successfully uploaded ${data.length} clients`,
+            });
+            setResult({
+              success: data.length,
+              skipped: 0,
+              errors: []
+            });
+            if (onUploadComplete) onUploadComplete();
+          }
+
+          setProgress(100);
+          setIsUploading(false);
+        },
+        error: (error) => {
+          console.error('Parse error:', error);
+          toast({
+            title: 'Parse Error',
+            description: 'Failed to parse CSV file',
+            variant: 'destructive',
+          });
+          setIsUploading(false);
+        },
+      });
+
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to upload CSV',
+        variant: 'destructive',
+      });
+      setIsUploading(false);
+    }
   };
+
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -306,15 +280,12 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
     setIsDragging(false);
 
     const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+    if (file && fileInputRef.current) {
+      // Set the files on the input and trigger the change event
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInputRef.current.files = dataTransfer.files;
+      fileInputRef.current.dispatchEvent(new Event('change', { bubbles: true }));
     }
   };
 
@@ -347,7 +318,7 @@ export function CSVUpload({ onUploadComplete }: { onUploadComplete?: () => void 
             ref={fileInputRef}
             type="file"
             accept=".csv"
-            onChange={handleFileInputChange}
+            onChange={handleUpload}
             className="hidden"
             disabled={isUploading}
           />
