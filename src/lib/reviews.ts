@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sendClientsToWebhook, ClientData } from './services/n8n-webhook';
 
 export interface ReviewResult {
   clientId: string;
@@ -8,50 +9,88 @@ export interface ReviewResult {
   error?: string;
 }
 
-// New unified trigger functions
-export async function triggerReview(clientId: string) {
-  const { data, error } = await supabase.functions.invoke('trigger-review', {
-    body: { client_id: clientId }
-  })
+async function fetchClientData(clientId: string): Promise<ClientData | null> {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', clientId)
+    .single();
   
   if (error) {
-    console.error('Failed to trigger review:', error)
-    throw error
+    console.error('Failed to fetch client data:', error);
+    return null;
   }
   
-  if (!data?.success) {
-    throw new Error(data?.error || 'Failed to trigger review')
+  return data;
+}
+
+async function fetchMultipleClientsData(clientIds: string[]): Promise<ClientData[]> {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .in('id', clientIds);
+  
+  if (error) {
+    console.error('Failed to fetch clients data:', error);
+    return [];
   }
   
-  return data
+  return data || [];
+}
+
+// New unified trigger functions
+export async function triggerReview(clientId: string) {
+  // Fetch full client data
+  const clientData = await fetchClientData(clientId);
+  
+  if (!clientData) {
+    throw new Error('Failed to fetch client data');
+  }
+  
+  // Send to webhook as a list with single item
+  const result = await sendClientsToWebhook([clientData]);
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to trigger review');
+  }
+  
+  return result;
 }
 
 export async function triggerBulkReviews(clientIds: string[]): Promise<ReviewResult[]> {
-  const results: ReviewResult[] = []
-  
-  for (const clientId of clientIds) {
-    try {
-      const result = await triggerReview(clientId)
-      results.push({ 
-        clientId, 
-        success: true, 
-        reviewId: result.review_id 
-      })
-      console.log(`✓ Review triggered for client ${clientId}`)
-      
-      // Wait 3 seconds between requests to avoid overwhelming the system
-      await new Promise(resolve => setTimeout(resolve, 3000))
-    } catch (error: any) {
-      console.error(`✗ Failed to trigger review for client ${clientId}:`, error)
-      results.push({ 
-        clientId, 
-        success: false, 
-        error: error.message 
-      })
+  try {
+    // Fetch all client data at once
+    const clientsData = await fetchMultipleClientsData(clientIds);
+    
+    if (clientsData.length === 0) {
+      throw new Error('No client data found');
     }
+    
+    // Send all clients to webhook in one request
+    const result = await sendClientsToWebhook(clientsData);
+    
+    if (!result.success) {
+      // If failed, return failure for all
+      return clientIds.map(clientId => ({
+        clientId,
+        success: false,
+        error: result.error || 'Failed to trigger reviews'
+      }));
+    }
+    
+    // If successful, return success for all
+    return clientIds.map(clientId => ({
+      clientId,
+      success: true
+    }));
+  } catch (error: any) {
+    console.error('Failed to trigger bulk reviews:', error);
+    return clientIds.map(clientId => ({
+      clientId,
+      success: false,
+      error: error.message
+    }));
   }
-  
-  return results
 }
 
 // Legacy exports for backwards compatibility
