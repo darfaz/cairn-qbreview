@@ -20,7 +20,6 @@ interface Review {
   id: string;
   triggered_at: string;
   completed_at: string | null;
-  status: string;
   action_items_count: number;
   sheet_url: string | null;
 }
@@ -63,7 +62,7 @@ const ClientHistory = () => {
       // Fetch all reviews for this client
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select('id, triggered_at, completed_at, status, action_items_count, sheet_url')
+        .select('id, triggered_at, completed_at, action_items_count, sheet_url')
         .eq('client_id', clientId)
         .order('triggered_at', { ascending: false });
 
@@ -77,30 +76,24 @@ const ClientHistory = () => {
     }
   };
 
-  const getStatusBadge = (status: string, actionItemsCount: number) => {
-    if (status === 'processing') {
-      return <Badge variant="secondary">Processing</Badge>;
-    }
-    
-    if (status === 'failed') {
-      return <Badge variant="destructive">Failed</Badge>;
-    }
-
-    // For completed reviews, use color based on action items
-    let variant: 'default' | 'secondary' | 'destructive' = 'default';
+  const getStatusBadge = (actionItemsCount: number) => {
     let colorClass = '';
+    let statusText = '';
     
     if (actionItemsCount === 0) {
       colorClass = 'bg-green-500 hover:bg-green-600';
+      statusText = 'Clean';
     } else if (actionItemsCount >= 1 && actionItemsCount <= 3) {
       colorClass = 'bg-yellow-500 hover:bg-yellow-600';
+      statusText = `Review - ${actionItemsCount} ${actionItemsCount === 1 ? 'item' : 'items'}`;
     } else {
       colorClass = 'bg-red-500 hover:bg-red-600';
+      statusText = `Action - ${actionItemsCount} ${actionItemsCount === 1 ? 'item' : 'items'}`;
     }
 
     return (
       <Badge className={colorClass}>
-        {actionItemsCount} {actionItemsCount === 1 ? 'issue' : 'issues'}
+        {statusText}
       </Badge>
     );
   };
@@ -199,7 +192,7 @@ const ClientHistory = () => {
                         {formatTimestamp(review.completed_at)}
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(review.status, review.action_items_count)}
+                        {getStatusBadge(review.action_items_count)}
                       </TableCell>
                       <TableCell>
                         {review.sheet_url ? (

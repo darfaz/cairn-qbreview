@@ -19,7 +19,6 @@ interface ClientWithReview {
   realm_id: string;
   dropbox_folder_url: string | null;
   last_review_date: string | null;
-  review_status: string | null;
   action_items_count: number | null;
   connection_status: 'connected' | 'disconnected';
 }
@@ -74,7 +73,7 @@ const Index = () => {
       const clientIds = data.map(c => c.id);
       const { data: reviews } = await supabase
         .from('reviews')
-        .select('client_id, triggered_at, status, action_items_count')
+        .select('client_id, triggered_at, action_items_count')
         .in('client_id', clientIds)
         .order('triggered_at', { ascending: false });
 
@@ -111,7 +110,6 @@ const Index = () => {
           realm_id: client.realm_id,
           dropbox_folder_url: client.dropbox_folder_url,
           last_review_date: latestReview?.triggered_at || null,
-          review_status: latestReview?.status || null,
           action_items_count: latestReview?.action_items_count ?? null,
           connection_status: connectionStatus,
         };
@@ -192,7 +190,7 @@ const Index = () => {
     const greenClients = clients.filter(c => c.action_items_count === 0).length;
     const yellowClients = clients.filter(c => c.action_items_count && c.action_items_count >= 1 && c.action_items_count <= 3).length;
     const redClients = clients.filter(c => c.action_items_count && c.action_items_count >= 4).length;
-    const disconnectedClients = clients.filter(c => c.review_status === 'failed').length;
+    const disconnectedClients = clients.filter(c => c.connection_status === 'disconnected').length;
 
     return {
       totalClients: total,

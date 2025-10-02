@@ -15,7 +15,7 @@ interface QBOClient {
   client_name: string;
   realm_id: string;
   last_review_date: string | null;
-  last_review_status: string | null;
+  action_items_count: number | null;
   sheet_url: string | null;
 }
 
@@ -42,7 +42,7 @@ export default function ClientsPage() {
         realm_id,
         reviews (
           triggered_at,
-          status,
+          action_items_count,
           sheet_url
         )
       `)
@@ -63,7 +63,7 @@ export default function ClientsPage() {
           client_name: client.client_name,
           realm_id: client.realm_id,
           last_review_date: latestReview?.triggered_at || null,
-          last_review_status: latestReview?.status || null,
+          action_items_count: latestReview?.action_items_count ?? null,
           sheet_url: latestReview?.sheet_url || null,
         };
       }) || [];
@@ -254,15 +254,17 @@ export default function ClientsPage() {
                         {new Date(client.last_review_date).toLocaleDateString()}
                       </div>
                     )}
-                    {client.last_review_status && (
+                    {client.action_items_count !== null && (
                       <div className="text-sm">
                         <span className="font-medium">Status:</span>
                         <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                          client.last_review_status === 'completed' ? 'bg-green-100 text-green-800' :
-                          client.last_review_status === 'failed' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
+                          client.action_items_count === 0 ? 'bg-green-100 text-green-800' :
+                          client.action_items_count >= 1 && client.action_items_count <= 3 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
                         }`}>
-                          {client.last_review_status}
+                          {client.action_items_count === 0 ? 'Clean' :
+                           client.action_items_count >= 1 && client.action_items_count <= 3 ? `Review (${client.action_items_count})` :
+                           `Action (${client.action_items_count})`}
                         </span>
                       </div>
                     )}
