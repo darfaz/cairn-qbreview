@@ -42,10 +42,8 @@ export function ClientGrid({
 }: ClientGridProps) {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const connectedClientIds = clients
-        .filter(client => client.connectionStatus === 'connected')
-        .map(client => client.id);
-      onSelectionChange(connectedClientIds);
+      const allClientIds = clients.map(client => client.id);
+      onSelectionChange(allClientIds);
     } else {
       onSelectionChange([]);
     }
@@ -59,9 +57,8 @@ export function ClientGrid({
     }
   };
 
-  const connectedClients = clients.filter(client => client.connectionStatus === 'connected');
-  const allConnectedSelected = connectedClients.length > 0 && 
-    connectedClients.every(client => selectedClientIds.includes(client.id));
+  const allClientsSelected = clients.length > 0 && 
+    clients.every(client => selectedClientIds.includes(client.id));
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -103,9 +100,9 @@ export function ClientGrid({
           <TableRow>
             <TableHead className="table-header w-12">
               <Checkbox
-                checked={allConnectedSelected}
+                checked={allClientsSelected}
                 onCheckedChange={handleSelectAll}
-                aria-label="Select all connected clients"
+                aria-label="Select all clients"
               />
             </TableHead>
             <TableHead className="table-header">Review</TableHead>
@@ -124,7 +121,6 @@ export function ClientGrid({
                 <Checkbox
                   checked={selectedClientIds.includes(client.id)}
                   onCheckedChange={(checked) => handleSelectClient(client.id, !!checked)}
-                  disabled={client.connectionStatus !== 'connected'}
                   aria-label={`Select ${client.name}`}
                 />
               </TableCell>
@@ -134,7 +130,6 @@ export function ClientGrid({
                   variant="outline"
                   size="sm"
                   onClick={() => onRunReconciliation(client.id)}
-                  disabled={client.connectionStatus === 'disconnected'}
                 >
                   <Play className="w-3 h-3 mr-1" />
                   Run
