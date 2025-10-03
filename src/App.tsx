@@ -15,6 +15,8 @@ import Clients from "./pages/Clients";
 import ClientHistory from "./pages/ClientHistory";
 import QBOCallback from "./pages/QBOCallback";
 import QBOConnections from "./pages/QBOConnections";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -36,6 +38,8 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <Settings />
