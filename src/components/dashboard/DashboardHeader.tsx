@@ -58,7 +58,7 @@ export function DashboardHeader({ searchQuery = '', onSearchChange, statusFilter
             <img 
               src={bescoredLogo} 
               alt="BeScored" 
-              className="block h-72 w-auto"
+              className="block h-16 w-auto"
             />
           </button>
         </div>
