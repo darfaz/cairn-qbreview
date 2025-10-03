@@ -322,7 +322,7 @@ const PrivacyPolicy = () => {
               </li>
               <li>
                 <a 
-                  href="https://quickbooks.intuit.com/learn-support/en-us/help-article/security-privacy/privacy-policy/L9Mb1jcJJ_US_en_US" 
+                  href="https://quickbooks.intuit.com/hk/privacy/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
