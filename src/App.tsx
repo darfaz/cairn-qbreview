@@ -17,6 +17,7 @@ import QBOCallback from "./pages/QBOCallback";
 import QBOConnections from "./pages/QBOConnections";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import EULA from "./pages/EULA";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/eula" element={<EULA />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/settings" element={

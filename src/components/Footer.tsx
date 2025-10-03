@@ -24,6 +24,10 @@ const Footer = () => {
             <Link to="/terms-of-service" className="text-muted-foreground hover:text-foreground transition-colors">
               Terms of Service
             </Link>
+            <span className="text-muted-foreground">|</span>
+            <Link to="/eula" className="text-muted-foreground hover:text-foreground transition-colors">
+              EULA
+            </Link>
           </nav>
         </div>
       </div>
