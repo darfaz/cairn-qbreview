@@ -27,7 +27,7 @@ const PrivacyPolicy = () => {
 
           <section className="mb-8">
             <p className="text-lg">
-              [Company Name] ("we," "us," or "our") is committed to protecting your privacy. 
+              Execture ("we," "us," or "our") is committed to protecting your privacy.
               This Privacy Policy explains how we collect, use, disclose, and safeguard your 
               information when you use our application that integrates with QuickBooks Online.
             </p>
@@ -192,7 +192,7 @@ const PrivacyPolicy = () => {
             <h3 className="text-xl font-medium mb-3">5.1 Right to Access</h3>
             <p>
               You can request a copy of the personal data we hold about you. Contact us at 
-              [Contact Email] to request your data.
+              contact@execture.com to request your data.
             </p>
 
             <h3 className="text-xl font-medium mb-3">5.2 Right to Request Data Deletion</h3>
@@ -210,7 +210,7 @@ const PrivacyPolicy = () => {
 
             <h3 className="text-xl font-medium mb-3">5.4 How to Exercise Your Rights</h3>
             <p>
-              To exercise any of these rights, please contact us at [Contact Email]. We will 
+              To exercise any of these rights, please contact us at contact@execture.com. We will 
               respond to your request within 30 days.
             </p>
           </section>
@@ -301,9 +301,9 @@ const PrivacyPolicy = () => {
               our data practices, please contact us:
             </p>
             <div className="bg-muted p-6 rounded-lg mt-4">
-              <p className="mb-2"><strong>Email:</strong> [Contact Email]</p>
-              <p className="mb-2"><strong>Company:</strong> [Company Name]</p>
-              <p><strong>Address:</strong> [Company Address]</p>
+              <p className="mb-2"><strong>Email:</strong> contact@execture.com</p>
+              <p className="mb-2"><strong>Company:</strong> Execture</p>
+              <p><strong>Address:</strong> 10000 Washington Blvd, Culver City, CA 90232</p>
             </div>
           </section>
 
