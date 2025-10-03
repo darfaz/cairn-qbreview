@@ -184,32 +184,32 @@ export type Database = {
       }
       qbo_tokens: {
         Row: {
-          access_token: string
+          access_token: string | null
           client_id: string | null
           created_at: string
           id: string
           realm_id: string
-          refresh_token: string
+          refresh_token: string | null
           token_expires_at: string
           updated_at: string
         }
         Insert: {
-          access_token: string
+          access_token?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
           realm_id: string
-          refresh_token: string
+          refresh_token?: string | null
           token_expires_at: string
           updated_at?: string
         }
         Update: {
-          access_token?: string
+          access_token?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
           realm_id?: string
-          refresh_token?: string
+          refresh_token?: string | null
           token_expires_at?: string
           updated_at?: string
         }
@@ -355,6 +355,14 @@ export type Database = {
       cleanup_expired_oauth_states: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      decrypt_qbo_token: {
+        Args: { encrypted_token: string }
+        Returns: string
+      }
+      encrypt_qbo_token: {
+        Args: { token: string }
+        Returns: string
       }
       encrypt_token: {
         Args: { _key: string; _token: string }
