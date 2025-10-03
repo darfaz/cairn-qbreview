@@ -5,6 +5,7 @@ import { StatusIndicator } from '@/components/dashboard/StatusIndicator';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, RefreshCw, Plus } from 'lucide-react';
+import bescoredLogo from '@/assets/bescored-logo.png';
 import {
   Table,
   TableBody,
@@ -143,13 +144,7 @@ const CompanyManagement = () => {
               onClick={() => window.location.href = '/'}
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">C</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">Cairn Accounting</h1>
-                <p className="text-sm text-muted-foreground">Client Review Dashboard</p>
-              </div>
+              <img src={bescoredLogo} alt="BeScored" className="h-10" />
             </button>
             <div className="flex gap-2">
               <Button 

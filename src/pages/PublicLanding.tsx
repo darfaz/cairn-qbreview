@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, LogIn, UserPlus, Building2 } from 'lucide-react';
+import { Search, LogIn, UserPlus } from 'lucide-react';
+import bescoredLogo from '@/assets/bescored-logo.png';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ClientGrid } from '@/components/dashboard/ClientGrid';
 import { BulkReconciliationControls } from '@/components/dashboard/BulkReconciliationControls';
@@ -54,10 +55,7 @@ const PublicLanding = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-semibold">Cairn Accounting</h1>
+              <img src={bescoredLogo} alt="BeScored" className="h-8" />
             </div>
             
             <div className="flex items-center gap-3">

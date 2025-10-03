@@ -174,7 +174,7 @@ export function AddClientForm({ onSuccess }: { onSuccess?: () => void }) {
           type="text"
           value={dropboxFolderPath}
           onChange={(e) => setDropboxFolderPath(e.target.value)}
-          placeholder="/Cairn Automation/Client Name"
+          placeholder="/BeScored Automation/Client Name"
           required
           disabled={isLoading}
         />

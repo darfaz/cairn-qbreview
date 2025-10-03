@@ -293,11 +293,11 @@ const Index = () => {
         <main className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center space-y-6 p-8 max-w-md">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-              <Building2 className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="text-2xl font-semibold">Welcome to Cairn Accounting</h2>
-            <p className="text-muted-foreground">
-              Get started by adding your first client to begin automated reconciliation reviews.
+            <Building2 className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-2xl font-semibold">Welcome to BeScored</h2>
+          <p className="text-muted-foreground">
+            Get started by adding your first client to begin automated reconciliation reviews.
             </p>
             <Button onClick={() => navigate('/clients')} size="lg">
               Add Your First Client

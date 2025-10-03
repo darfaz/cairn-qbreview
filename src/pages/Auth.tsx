@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Building2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import bescoredLogo from '@/assets/bescored-logo.png';
 import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
 
@@ -179,11 +180,9 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-              <Building2 className="text-primary-foreground h-6 w-6" />
-            </div>
+            <img src={bescoredLogo} alt="BeScored" className="h-16" />
           </div>
-          <CardTitle className="text-2xl">Cairn Accounting</CardTitle>
+          <CardTitle className="text-2xl">BeScored</CardTitle>
           <CardDescription>
             Client Review Dashboard
           </CardDescription>
