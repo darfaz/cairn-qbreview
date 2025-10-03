@@ -368,6 +368,14 @@ export type Database = {
         Args: { _key: string; _token: string }
         Returns: string
       }
+      get_qbo_connection_info: {
+        Args: { p_realm_id: string }
+        Returns: {
+          expires_at: string
+          is_connected: boolean
+          is_expired: boolean
+        }[]
+      }
       get_qbo_connection_status: {
         Args: { p_client_id: string }
         Returns: {

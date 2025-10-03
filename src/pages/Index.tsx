@@ -77,19 +77,24 @@ const Index = () => {
         .in('client_id', clientIds)
         .order('triggered_at', { ascending: false });
 
-      // Fetch QBO tokens to check connection status
+      // Check QBO connection status using secure function
       const realmIds = data.map(c => c.realm_id);
-      const { data: tokens } = await supabase
-        .from('qbo_tokens')
-        .select('realm_id, token_expires_at')
-        .in('realm_id', realmIds);
-
-      // Create a map of realm_id to connection status
+      
+      // Fetch connection status for each realm using secure function
       const connectionStatusMap = new Map();
-      tokens?.forEach(token => {
-        const isExpired = new Date(token.token_expires_at) < new Date();
-        connectionStatusMap.set(token.realm_id, isExpired ? 'disconnected' : 'connected');
-      });
+      await Promise.all(
+        realmIds.map(async (realmId) => {
+          const { data: connectionInfo } = await supabase
+            .rpc('get_qbo_connection_info', { p_realm_id: realmId })
+            .single();
+          
+          if (connectionInfo?.is_connected && !connectionInfo.is_expired) {
+            connectionStatusMap.set(realmId, 'connected');
+          } else {
+            connectionStatusMap.set(realmId, 'disconnected');
+          }
+        })
+      );
 
       // Group reviews by client_id and get the latest one
       const latestReviewsByClient = new Map();

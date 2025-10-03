@@ -85,22 +85,19 @@ export async function checkQBOConnection(realmId: string): Promise<{
       return { isConnected: false, isExpired: false };
     }
 
-    // Then check for tokens
-    const { data: token } = await supabase
-      .from('qbo_tokens')
-      .select('token_expires_at')
-      .eq('realm_id', realmId)
+    // Use secure function to check connection status without exposing tokens
+    const { data: connectionInfo, error } = await supabase
+      .rpc('get_qbo_connection_info', { p_realm_id: realmId })
       .single();
 
-    if (!token) {
+    if (error || !connectionInfo) {
       return { isConnected: false, isExpired: false };
     }
 
-    const isExpired = new Date(token.token_expires_at) < new Date();
     return {
-      isConnected: true,
-      isExpired,
-      expiresAt: token.token_expires_at,
+      isConnected: connectionInfo.is_connected,
+      isExpired: connectionInfo.is_expired,
+      expiresAt: connectionInfo.expires_at,
     };
   } catch (error) {
     console.error('Error checking QBO connection:', error);
@@ -130,19 +127,16 @@ export async function checkClientQBOConnection(clientId: string): Promise<'conne
       return 'disconnected';
     }
 
-    // Check for valid token
-    const { data: token } = await supabase
-      .from('qbo_tokens')
-      .select('token_expires_at')
-      .eq('realm_id', client.realm_id)
+    // Use secure function to check connection status
+    const { data: connectionInfo, error } = await supabase
+      .rpc('get_qbo_connection_info', { p_realm_id: client.realm_id })
       .single();
 
-    if (!token) {
+    if (error || !connectionInfo || !connectionInfo.is_connected) {
       return 'disconnected';
     }
 
-    const isExpired = new Date(token.token_expires_at) < new Date();
-    return isExpired ? 'disconnected' : 'connected';
+    return connectionInfo.is_expired ? 'disconnected' : 'connected';
   } catch (error) {
     console.error('Error checking client QBO connection:', error);
     return 'disconnected';
@@ -179,39 +173,34 @@ export async function disconnectQBO(realmId: string): Promise<{
  */
 export async function getConnectedCompanies(): Promise<QBOConnection[]> {
   try {
-    const { data, error } = await supabase
+    const { data: clients, error } = await supabase
       .from('clients')
-      .select(`
-        id,
-        client_name,
-        realm_id,
-        created_at,
-        qbo_tokens (
-          token_expires_at
-        )
-      `);
+      .select('id, client_name, realm_id, created_at');
 
     if (error) throw error;
 
-    const connections: QBOConnection[] = (data || []).map((client: any) => {
-      const token = Array.isArray(client.qbo_tokens) && client.qbo_tokens.length > 0 
-        ? client.qbo_tokens[0] 
-        : null;
-      
-      const isConnected = !!token;
-      const isExpired = token ? new Date(token.token_expires_at) < new Date() : false;
+    // For each client, check connection status using secure function
+    const connections: QBOConnection[] = await Promise.all(
+      (clients || []).map(async (client) => {
+        const { data: connectionInfo } = await supabase
+          .rpc('get_qbo_connection_info', { p_realm_id: client.realm_id })
+          .single();
+        
+        const isConnected = connectionInfo?.is_connected ?? false;
+        const isExpired = connectionInfo?.is_expired ?? false;
 
-      return {
-        id: client.id,
-        realm_id: client.realm_id,
-        client_id: client.id,
-        client_name: client.client_name,
-        is_connected: isConnected,
-        is_expired: isExpired,
-        expires_at: token?.token_expires_at || null,
-        last_synced: client.created_at
-      };
-    });
+        return {
+          id: client.id,
+          realm_id: client.realm_id,
+          client_id: client.id,
+          client_name: client.client_name,
+          is_connected: isConnected,
+          is_expired: isExpired,
+          expires_at: connectionInfo?.expires_at || null,
+          last_synced: client.created_at
+        };
+      })
+    );
 
     return connections;
   } catch (error) {
