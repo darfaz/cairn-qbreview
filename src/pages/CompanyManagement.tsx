@@ -143,9 +143,14 @@ const CompanyManagement = () => {
             <button 
               onClick={() => window.location.href = '/'}
               className="flex items-center hover:opacity-80 transition-opacity"
-              style={{ background: 'transparent' }}
+              style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}
             >
-              <img src={bescoredLogo} alt="BeScored" className="h-24" style={{ background: 'transparent' }} />
+              <img 
+                src={bescoredLogo} 
+                alt="BeScored" 
+                className="h-36" 
+                style={{ background: 'transparent', border: 'none', boxShadow: 'none' }} 
+              />
             </button>
             <div className="flex gap-2">
               <Button 
