@@ -418,22 +418,12 @@ const TermsOfService = () => {
               </li>
               <li>
                 <a 
-                  href="https://www.intuit.com/legal/terms/en-us/quickbooks/online/" 
+                  href="https://www.intuit.com/legal/terms/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  QuickBooks Terms of Service
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="https://www.intuit.com/privacy/statement/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Intuit Privacy Statement
+                  Intuit Terms of Service
                 </a>
               </li>
             </ul>

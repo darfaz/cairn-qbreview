@@ -321,16 +321,6 @@ const PrivacyPolicy = () => {
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://quickbooks.intuit.com/hk/privacy/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  QuickBooks Privacy Policy
-                </a>
-              </li>
-              <li>
                 <Link to="/terms-of-service" className="text-primary hover:underline">
                   Our Terms of Service
                 </Link>
