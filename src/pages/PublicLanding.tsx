@@ -51,21 +51,14 @@ const PublicLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with Auth Buttons */}
-      <header className="bg-transparent">
+      <header className="p-0 m-0 border-0 shadow-none">
         <div className="container mx-auto p-0">
           <div className="flex items-center justify-between">
-            <div style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, margin: 0 }}>
+            <div>
               <img 
                 src={bescoredLogo} 
                 alt="BeScored" 
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  boxShadow: 'none',
-                  display: 'block',
-                  height: '12rem',
-                  width: 'auto'
-                }} 
+                className="block h-48 w-auto"
               />
             </div>
             

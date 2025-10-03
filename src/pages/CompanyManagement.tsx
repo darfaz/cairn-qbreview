@@ -137,31 +137,17 @@ const CompanyManagement = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-transparent px-6 py-4">
+      <header className="p-0 m-0 border-0 shadow-none">
         <div className="container mx-auto p-0">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => window.location.href = '/'}
-              style={{ 
-                background: 'transparent', 
-                border: 'none', 
-                boxShadow: 'none', 
-                padding: 0,
-                margin: 0 
-              }}
-              className="hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity p-0 m-0 border-0 shadow-none"
             >
               <img 
                 src={bescoredLogo} 
                 alt="BeScored" 
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none', 
-                  boxShadow: 'none',
-                  display: 'block',
-                  height: '12rem',
-                  width: 'auto'
-                }} 
+                className="block h-48 w-auto"
               />
             </button>
             <div className="flex gap-2">
