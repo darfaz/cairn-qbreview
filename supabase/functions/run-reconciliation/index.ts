@@ -213,17 +213,16 @@ async function processBulkQueue(clientIds: string[]) {
 async function processClientReconciliation(clientId: string, runType: 'scheduled' | 'manual', retryCount = 0) {
   const maxRetries = 3;
   
-  // Get client details with QBO connection
+  // Get client details with QBO token
   const { data: client, error: clientError } = await supabase
     .from('clients')
     .select(`
       *,
-      qbo_connections!inner(
+      qbo_tokens!inner(
         id,
         access_token,
         refresh_token,
         token_expires_at,
-        connection_status,
         realm_id
       )
     `)
@@ -234,14 +233,14 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
     throw new Error(`Client not found: ${clientError?.message}`);
   }
 
-  const connection = client.qbo_connections[0];
-  if (!connection) {
-    throw new Error('No QuickBooks connection found for client');
+  const tokenRecord = client.qbo_tokens[0];
+  if (!tokenRecord) {
+    throw new Error('No QuickBooks token found for client');
   }
 
   // Check if token needs refresh
-  let accessToken = connection.access_token;
-  const tokenExpiry = new Date(connection.token_expires_at);
+  let accessToken = tokenRecord.access_token;
+  const tokenExpiry = new Date(tokenRecord.token_expires_at);
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -250,7 +249,7 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
     
     try {
       const refreshResult = await supabase.functions.invoke('quickbooks-token-refresh', {
-        body: { connectionId: connection.id }
+        body: { tokenId: tokenRecord.id }
       });
 
       if (refreshResult.error || !refreshResult.data?.success) {
@@ -258,14 +257,14 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
       }
 
       // Get updated token
-      const { data: updatedConnection } = await supabase
-        .from('qbo_connections')
+      const { data: updatedToken } = await supabase
+        .from('qbo_tokens')
         .select('access_token')
-        .eq('id', connection.id)
+        .eq('id', tokenRecord.id)
         .single();
 
-      if (updatedConnection) {
-        accessToken = updatedConnection.access_token;
+      if (updatedToken) {
+        accessToken = updatedToken.access_token;
       }
     } catch (refreshError) {
       console.error('Token refresh failed:', refreshError);
@@ -275,22 +274,26 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
         throw new Error(`Token refresh failed, will retry: ${refreshError instanceof Error ? refreshError.message : 'Unknown error'}`);
       }
       
-      // Mark connection as needing reconnect
-      await supabase
-        .from('qbo_connections')
-        .update({ connection_status: 'needs_reconnect' })
-        .eq('id', connection.id);
-        
       throw new Error('Token refresh failed after max retries');
     }
   }
 
-  // Decrypt access token for use
+  // Decrypt access token using database function
   let decryptedToken = accessToken;
   try {
-    decryptedToken = atob(accessToken); // Simple base64 decode - matches encryption in token-refresh
+    const { data: decrypted, error: decryptError } = await supabase
+      .rpc('decrypt_qbo_token', { encrypted_token: accessToken });
+    
+    if (decryptError) {
+      console.error('Token decryption failed:', decryptError);
+      throw new Error(`Token decryption failed: ${decryptError.message}`);
+    }
+    
+    decryptedToken = decrypted;
+    console.log('Token decrypted successfully');
   } catch (error) {
-    console.error('Token decryption failed:', error);
+    console.error('Token decryption error:', error);
+    throw error;
   }
 
   // Create reconciliation run record
@@ -314,9 +317,9 @@ async function processClientReconciliation(clientId: string, runType: 'scheduled
     const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/run-reconciliation?runId=${runRecord.id}`;
     
     const webhookPayload: N8nWebhookPayload = {
-      realm_id: connection.realm_id,
+      realm_id: tokenRecord.realm_id,
       access_token: decryptedToken,
-      client_name: client.qbo_company_name || client.name,
+      client_name: client.client_name,
       run_id: runRecord.id,
       callback_url: callbackUrl
     };

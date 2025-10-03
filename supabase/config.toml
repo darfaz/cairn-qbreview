@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.review-callback]
 verify_jwt = false
+
+[functions.qbo-oauth-handler]
+verify_jwt = false
+
+[functions.quickbooks-token-refresh]
+verify_jwt = false
