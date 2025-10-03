@@ -133,7 +133,7 @@ const TermsOfService = () => {
               You must comply with QuickBooks Online's terms of service and acceptable use policies. 
               You can review QuickBooks' terms at{" "}
               <a 
-                href="https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/intuit-terms-service/L9H0VhuPQ_US_en_US" 
+                href="https://www.intuit.com/legal/terms/en-us/quickbooks/online/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
@@ -418,7 +418,7 @@ const TermsOfService = () => {
               </li>
               <li>
                 <a 
-                  href="https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/intuit-terms-service/L9H0VhuPQ_US_en_US" 
+                  href="https://www.intuit.com/legal/terms/en-us/quickbooks/online/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
