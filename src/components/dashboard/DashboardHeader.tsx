@@ -54,8 +54,9 @@ export function DashboardHeader({ searchQuery = '', onSearchChange, statusFilter
           <button 
             onClick={() => navigate('/')}
             className="flex items-center hover:opacity-80 transition-opacity"
+            style={{ background: 'transparent' }}
           >
-            <img src={bescoredLogo} alt="BeScored" className="h-16" />
+            <img src={bescoredLogo} alt="BeScored" className="h-24" style={{ background: 'transparent' }} />
           </button>
         </div>
 
