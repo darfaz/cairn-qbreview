@@ -27,7 +27,7 @@ const TermsOfService = () => {
 
           <section className="mb-8">
             <p className="text-lg">
-              Please read these Terms of Service ("Terms") carefully before using the [Company Name] 
+              Please read these Terms of Service ("Terms") carefully before using the Execture 
               application ("Service") that integrates with QuickBooks Online. These Terms govern 
               your access to and use of our Service.
             </p>
@@ -170,7 +170,7 @@ const TermsOfService = () => {
             <ul className="list-disc pl-6 mb-4">
               <li>Using the disconnect option in your account settings</li>
               <li>Revoking access through your QuickBooks account settings</li>
-              <li>Contacting our support team at [Contact Email]</li>
+              <li>Contacting our support team at contact@execture.com</li>
             </ul>
             <p>
               Disconnection will immediately stop all data synchronization. We will retain 
@@ -191,7 +191,7 @@ const TermsOfService = () => {
             <h3 className="text-xl font-medium mb-3">5.1 Account Creation and Termination</h3>
             <p>
               You may create an account by registering with valid information. You may terminate 
-              your account at any time by contacting us at [Contact Email]. We may terminate or 
+              your account at any time by contacting us at contact@execture.com. We may terminate or 
               suspend your account if you violate these Terms.
             </p>
 
@@ -224,7 +224,7 @@ const TermsOfService = () => {
             <h3 className="text-xl font-medium mb-3">6.1 Our Ownership of the App</h3>
             <p>
               The Service, including all software, designs, text, graphics, logos, and other 
-              materials (excluding your data), is owned by [Company Name] and protected by 
+              materials (excluding your data), is owned by Execture and protected by 
               copyright, trademark, and other intellectual property laws. You may not copy, 
               modify, distribute, or create derivative works without our written permission.
             </p>
@@ -271,7 +271,7 @@ const TermsOfService = () => {
 
             <h3 className="text-xl font-medium mb-3">7.3 Limitation of Damages</h3>
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, [COMPANY NAME] SHALL NOT BE LIABLE FOR ANY 
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, EXECTURE SHALL NOT BE LIABLE FOR ANY 
               INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF 
               PROFITS, REVENUE, DATA, OR USE, ARISING FROM OR RELATED TO YOUR USE OF THE SERVICE, 
               EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
@@ -284,7 +284,7 @@ const TermsOfService = () => {
 
             <h3 className="text-xl font-medium mb-3">7.4 Indemnification</h3>
             <p>
-              You agree to indemnify, defend, and hold harmless [Company Name], its officers, 
+              You agree to indemnify, defend, and hold harmless Execture, its officers, 
               directors, employees, and agents from any claims, liabilities, damages, losses, 
               costs, or expenses (including reasonable attorneys' fees) arising from:
             </p>
@@ -373,7 +373,7 @@ const TermsOfService = () => {
             <h3 className="text-xl font-medium mb-3">11.1 Entire Agreement</h3>
             <p>
               These Terms, together with our Privacy Policy, constitute the entire agreement 
-              between you and [Company Name] regarding the Service and supersede all prior 
+              between you and Execture regarding the Service and supersede all prior 
               agreements and understandings.
             </p>
 
@@ -402,10 +402,9 @@ const TermsOfService = () => {
               If you have questions about these Terms, please contact us:
             </p>
             <div className="bg-muted p-6 rounded-lg mt-4">
-              <p className="mb-2"><strong>Email:</strong> [Contact Email]</p>
-              <p className="mb-2"><strong>Support:</strong> [Support Email]</p>
-              <p className="mb-2"><strong>Company:</strong> [Company Name]</p>
-              <p><strong>Address:</strong> [Company Address]</p>
+              <p className="mb-2"><strong>Support:</strong> contact@execture.com</p>
+              <p className="mb-2"><strong>Company:</strong> Execture</p>
+              <p><strong>Address:</strong> 10000 Washington Blvd, Culver City, CA 90232</p>
             </div>
           </section>
 
