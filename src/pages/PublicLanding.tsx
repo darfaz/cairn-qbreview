@@ -54,12 +54,18 @@ const PublicLanding = () => {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
+            <div style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, margin: 0 }}>
               <img 
                 src={bescoredLogo} 
                 alt="BeScored" 
-                className="h-36" 
-                style={{ background: 'transparent', border: 'none', boxShadow: 'none' }} 
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  boxShadow: 'none',
+                  display: 'block',
+                  height: '12rem',
+                  width: 'auto'
+                }} 
               />
             </div>
             

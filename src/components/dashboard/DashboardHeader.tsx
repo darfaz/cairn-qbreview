@@ -53,14 +53,26 @@ export function DashboardHeader({ searchQuery = '', onSearchChange, statusFilter
         <div className="flex items-center space-x-4">
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center hover:opacity-80 transition-opacity"
-            style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              boxShadow: 'none', 
+              padding: 0,
+              margin: 0 
+            }}
+            className="hover:opacity-80 transition-opacity"
           >
             <img 
               src={bescoredLogo} 
               alt="BeScored" 
-              className="h-36" 
-              style={{ background: 'transparent', border: 'none', boxShadow: 'none' }} 
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                boxShadow: 'none',
+                display: 'block',
+                height: '12rem',
+                width: 'auto'
+              }} 
             />
           </button>
         </div>

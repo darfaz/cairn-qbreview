@@ -179,12 +179,18 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
+          <div className="flex justify-center mb-4" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, margin: 0 }}>
             <img 
               src={bescoredLogo} 
               alt="BeScored" 
-              className="h-56" 
-              style={{ background: 'transparent', border: 'none', boxShadow: 'none' }} 
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                boxShadow: 'none',
+                display: 'block',
+                height: '18rem',
+                width: 'auto'
+              }} 
             />
           </div>
           <CardTitle className="text-2xl">BeScored</CardTitle>
