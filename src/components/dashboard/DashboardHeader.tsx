@@ -48,7 +48,7 @@ export function DashboardHeader({ searchQuery = '', onSearchChange, statusFilter
   };
 
   return (
-    <header className="bg-transparent px-6 py-4">
+    <header className="bg-transparent p-0 border-0 shadow-none">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button 

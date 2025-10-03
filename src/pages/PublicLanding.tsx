@@ -52,7 +52,7 @@ const PublicLanding = () => {
     <div className="min-h-screen bg-background">
       {/* Header with Auth Buttons */}
       <header className="bg-transparent">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto p-0">
           <div className="flex items-center justify-between">
             <div style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, margin: 0 }}>
               <img 

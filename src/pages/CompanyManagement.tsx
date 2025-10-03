@@ -138,7 +138,7 @@ const CompanyManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-transparent px-6 py-4">
-        <div className="container mx-auto">
+        <div className="container mx-auto p-0">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => window.location.href = '/'}
