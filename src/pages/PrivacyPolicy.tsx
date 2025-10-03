@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/Footer";
 
 const PrivacyPolicy = () => {
   return (
@@ -339,16 +340,7 @@ const PrivacyPolicy = () => {
         </article>
       </main>
 
-      <footer className="border-t mt-12 py-8 bg-card">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <div className="flex flex-wrap justify-center gap-6 mb-4">
-            <Link to="/" className="hover:text-foreground">Home</Link>
-            <Link to="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
-            <Link to="/terms-of-service" className="hover:text-foreground">Terms of Service</Link>
-          </div>
-          <p>© {new Date().getFullYear()} [Company Name]. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -11,6 +11,7 @@ import { BulkReconciliationControls } from '@/components/dashboard/BulkReconcili
 import { generateMockClients, mockSummary } from '@/data/mockClients';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import Footer from '@/components/Footer';
 
 const PublicLanding = () => {
   const navigate = useNavigate();
@@ -145,6 +146,8 @@ const PublicLanding = () => {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };
