@@ -144,7 +144,7 @@ const CompanyManagement = () => {
               onClick={() => window.location.href = '/'}
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
-              <img src={bescoredLogo} alt="BeScored" className="h-10" />
+              <img src={bescoredLogo} alt="BeScored" className="h-12" />
             </button>
             <div className="flex gap-2">
               <Button 

@@ -180,7 +180,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={bescoredLogo} alt="BeScored" className="h-16" />
+            <img src={bescoredLogo} alt="BeScored" className="h-20" />
           </div>
           <CardTitle className="text-2xl">BeScored</CardTitle>
           <CardDescription>
