@@ -147,7 +147,7 @@ const CompanyManagement = () => {
               <img 
                 src={bescoredLogo} 
                 alt="BeScored" 
-                className="block h-48 w-auto"
+                className="block h-72 w-auto"
               />
             </button>
             <div className="flex gap-2">

@@ -49,7 +49,7 @@ const PublicLanding = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header with Auth Buttons */}
       <header className="p-0 m-0 border-0 shadow-none">
         <div className="container mx-auto p-0">
@@ -58,7 +58,7 @@ const PublicLanding = () => {
               <img 
                 src={bescoredLogo} 
                 alt="BeScored" 
-                className="block h-48 w-auto"
+                className="block h-72 w-auto"
               />
             </div>
             
