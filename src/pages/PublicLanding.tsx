@@ -51,7 +51,7 @@ const PublicLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with Auth Buttons */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="bg-transparent">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, margin: 0 }}>
