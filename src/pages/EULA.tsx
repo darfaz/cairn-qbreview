@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 
 const EULA = () => {
@@ -6,6 +7,14 @@ const EULA = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+          
           <h1 className="text-4xl font-bold mb-2">End-User License Agreement (EULA)</h1>
           <p className="text-muted-foreground mb-8">Last Updated: January 2025</p>
           
