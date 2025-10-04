@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { quickbooksConfig } from '@/config/quickbooks';
+import { getQuickBooksConfig } from '@/config/quickbooks';
 
 const N8N_OAUTH_WEBHOOK = 'https://execture.app.n8n.cloud/webhook/qbo-oauth-callback';
 
@@ -19,8 +19,10 @@ export interface QBOConnection {
  */
 export async function initiateQBOAuth(clientId: string, clientName: string, realmId: string) {
   try {
+    const config = getQuickBooksConfig();
+    
     // Validate configuration
-    if (!quickbooksConfig.clientId) {
+    if (!config.clientId) {
       console.error('QuickBooks Client ID not configured');
       return {
         success: false,
@@ -42,18 +44,18 @@ export async function initiateQBOAuth(clientId: string, clientName: string, real
 
     // Build QuickBooks OAuth URL
     const authParams = new URLSearchParams({
-      client_id: quickbooksConfig.clientId,
-      scope: quickbooksConfig.scope,
-      redirect_uri: quickbooksConfig.redirectUri,
+      client_id: config.clientId,
+      scope: config.scope,
+      redirect_uri: config.redirectUri,
       response_type: 'code',
       state: state
     });
 
-    const authUrl = `${quickbooksConfig.authorizationUrl}?${authParams.toString()}`;
+    const authUrl = `${config.authorizationUrl}?${authParams.toString()}`;
     
     // Log for debugging
     console.log('QuickBooks OAuth URL:', authUrl);
-    console.log('Redirect URI:', quickbooksConfig.redirectUri);
+    console.log('Redirect URI:', config.redirectUri);
 
     // Redirect to QuickBooks OAuth
     window.location.href = authUrl;

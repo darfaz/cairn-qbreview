@@ -1,4 +1,4 @@
-import { quickbooksConfig } from '@/config/quickbooks';
+import { getQuickBooksConfig } from '@/config/quickbooks';
 
 // Generate random state for CSRF protection
 function generateState() {
@@ -8,26 +8,29 @@ function generateState() {
 
 // Build authorization URL
 export function getQuickBooksAuthUrl() {
+  const config = getQuickBooksConfig();
   const state = generateState();
   
   // Store state in sessionStorage for validation later
   sessionStorage.setItem('qb_oauth_state', state);
   
   const params = new URLSearchParams({
-    client_id: quickbooksConfig.clientId,
-    scope: quickbooksConfig.scope,
-    redirect_uri: quickbooksConfig.redirectUri,
+    client_id: config.clientId,
+    scope: config.scope,
+    redirect_uri: config.redirectUri,
     response_type: 'code',
     state: state
   });
   
-  return `${quickbooksConfig.authorizationUrl}?${params.toString()}`;
+  return `${config.authorizationUrl}?${params.toString()}`;
 }
 
 // Redirect to QuickBooks OAuth
 export function connectToQuickBooks() {
+  const config = getQuickBooksConfig();
+  
   // Validate configuration
-  if (!quickbooksConfig.clientId || quickbooksConfig.clientId === 'REPLACE_WITH_YOUR_CLIENT_ID') {
+  if (!config.clientId || config.clientId === 'REPLACE_WITH_YOUR_CLIENT_ID') {
     alert('QuickBooks integration not configured. Please contact support.');
     console.error('QuickBooks Client ID not configured');
     return;
