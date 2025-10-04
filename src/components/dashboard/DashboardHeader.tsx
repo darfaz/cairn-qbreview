@@ -43,7 +43,7 @@ export function DashboardHeader({ searchQuery = '', onSearchChange, statusFilter
         variant: 'destructive',
       });
     } else {
-      navigate('/landing');
+      navigate('/');
     }
   };
 
