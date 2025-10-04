@@ -44,6 +44,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('[AUTH] State change detected:', { 
+          event, 
+          userId: session?.user?.id, 
+          hasSession: !!session 
+        });
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
@@ -61,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/#/dashboard`;
+      console.log('[AUTH] signUp called:', { email, redirectUrl });
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -74,35 +80,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
+      console.log('[AUTH] signUp result:', { error: !!error, errorMessage: error?.message });
       return { error };
     } catch (error) {
+      console.error('[AUTH] signUp exception:', error);
       return { error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('[AUTH] signIn called:', { email });
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
+      console.log('[AUTH] signIn result:', { error: !!error, errorMessage: error?.message });
       return { error };
     } catch (error) {
+      console.error('[AUTH] signIn exception:', error);
       return { error };
     }
   };
 
   const signInWithGoogle = async () => {
     try {
+      const redirectTo = `${window.location.origin}/#/dashboard`;
+      console.log('[AUTH] signInWithGoogle called:', { redirectTo });
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/#/dashboard`
+          redirectTo
         }
       });
+      
+      console.log('[AUTH] signInWithGoogle result:', { error: !!error, errorMessage: error?.message });
       return { error };
     } catch (error) {
+      console.error('[AUTH] signInWithGoogle exception:', error);
       return { error };
     }
   };
