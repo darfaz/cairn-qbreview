@@ -4,7 +4,7 @@ export const getQuickBooksConfig = () => {
                         window.location.hostname === 'localhost';
   
   return {
-    clientId: 'ABC26AQKsKFuq5zbtbGukJeU3bGgwWiHodDbsJk5AeGnqRu7Tg',
+    clientId: 'ABXzBl76HALJ2Vl6gBOManUvfOVb0r4mwFrsKNcbS8Mc4rcjqN',
     redirectUri: `${window.location.origin}/qbo-callback`,
     environment: isDevelopment ? 'sandbox' : 'production',
     authorizationUrl: 'https://appcenter.intuit.com/connect/oauth2',
