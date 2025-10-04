@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import bescoredLogo from '@/assets/bescored-logo.png';
 import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
+import Footer from '@/components/Footer';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters long');
@@ -176,8 +177,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, margin: 0 }}>
             <img 
@@ -363,6 +365,8 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
+      <Footer />
     </div>
   );
 };
