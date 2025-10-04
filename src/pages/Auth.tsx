@@ -26,7 +26,14 @@ const Auth = () => {
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
+    console.log('[AUTH PAGE] useEffect triggered:', { 
+      authLoading, 
+      hasUser: !!user,
+      userId: user?.id 
+    });
+    
     if (!authLoading && user) {
+      console.log('[AUTH PAGE] Redirecting to /dashboard');
       navigate('/dashboard');
     }
   }, [user, authLoading, navigate]);
@@ -57,6 +64,8 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('[AUTH PAGE] handleSignIn called');
+    
     const validationError = validateForm(signInEmail, signInPassword);
     if (validationError) {
       toast({
@@ -73,6 +82,7 @@ const Auth = () => {
       const { error } = await signIn(signInEmail, signInPassword);
       
       if (error) {
+        console.log('[AUTH PAGE] Sign in error:', error.message);
         let errorMessage = 'Failed to sign in';
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password';
@@ -86,13 +96,15 @@ const Auth = () => {
           variant: 'destructive',
         });
       } else {
+        console.log('[AUTH PAGE] Sign in successful, useEffect will handle redirect');
         toast({
           title: 'Welcome back!',
           description: 'You have successfully signed in.',
         });
-        navigate('/dashboard');
+        // Navigation is handled by useEffect - DO NOT manually navigate here
       }
     } catch (error) {
+      console.error('[AUTH PAGE] Sign in exception:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
@@ -105,6 +117,8 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('[AUTH PAGE] handleSignUp called');
     
     const validationError = validateForm(signUpEmail, signUpPassword);
     if (validationError) {
@@ -131,6 +145,7 @@ const Auth = () => {
       const { error } = await signUp(signUpEmail, signUpPassword, firstName, lastName);
       
       if (error) {
+        console.log('[AUTH PAGE] Sign up error:', error.message);
         let errorMessage = 'Failed to create account';
         if (error.message.includes('already registered')) {
           errorMessage = 'An account with this email already exists';
@@ -142,6 +157,7 @@ const Auth = () => {
           variant: 'destructive',
         });
       } else {
+        console.log('[AUTH PAGE] Sign up successful');
         toast({
           title: 'Account Created',
           description: 'Please check your email to verify your account.',
@@ -149,6 +165,7 @@ const Auth = () => {
         setActiveTab('signin');
       }
     } catch (error) {
+      console.error('[AUTH PAGE] Sign up exception:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
@@ -160,19 +177,23 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log('[AUTH PAGE] handleGoogleSignIn called');
     setGoogleLoading(true);
     
     try {
       const { error } = await signInWithGoogle();
       
       if (error) {
+        console.log('[AUTH PAGE] Google sign in error:', error.message);
         toast({
           title: 'Google Sign In Error',
           description: 'Failed to sign in with Google. Please try again.',
           variant: 'destructive',
         });
       }
+      // Google OAuth handles redirect automatically
     } catch (error) {
+      console.error('[AUTH PAGE] Google sign in exception:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
