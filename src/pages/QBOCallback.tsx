@@ -22,7 +22,7 @@ export default function QBOCallback() {
         const state = searchParams.get('state');
 
         // Verify state to prevent CSRF
-        const storedState = sessionStorage.getItem('qbo_oauth_state');
+        const storedState = localStorage.getItem('qbo_oauth_state');
         if (storedState) {
           const parsedState = JSON.parse(storedState);
           
@@ -38,7 +38,7 @@ export default function QBOCallback() {
           setCompanyName(parsedState.clientName);
           
           // Clear state
-          sessionStorage.removeItem('qbo_oauth_state');
+          localStorage.removeItem('qbo_oauth_state');
         }
 
         if (success && realm_id) {
