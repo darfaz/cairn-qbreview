@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Link as LinkIcon } from 'lucide-react';
-import { connectToQuickBooks } from '@/lib/quickbooksOAuth';
+import { initiateQBOAuth } from '@/lib/services/qbo-oauth';
 
 interface ConnectQBOButtonProps {
   clientId: string;
@@ -20,13 +20,8 @@ export function ConnectQBOButton({
   onSuccess
 }: ConnectQBOButtonProps) {
   const handleConnect = () => {
-    // Store client info in sessionStorage for callback processing
-    sessionStorage.setItem('qb_client_id', clientId);
-    sessionStorage.setItem('qb_client_name', clientName);
-    sessionStorage.setItem('qb_realm_id', realmId);
-    
-    // Initiate OAuth flow
-    connectToQuickBooks();
+    // Initiate OAuth flow using unified method
+    initiateQBOAuth(clientId, clientName, realmId);
   };
 
   const getButtonText = () => {

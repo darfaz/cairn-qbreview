@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2, Building2, ExternalLink } from 'lucide-react';
@@ -7,6 +8,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 
 export function QBOConnectionCard() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [connections, setConnections] = useState<any[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -125,7 +127,7 @@ export function QBOConnectionCard() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.location.hash = '/qbo-connections'}
+                    onClick={() => navigate('/qbo-connections')}
                   >
                     Manage
                     <ExternalLink className="w-3 h-3 ml-1" />
