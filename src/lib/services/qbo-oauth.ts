@@ -2,6 +2,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 const N8N_OAUTH_WEBHOOK = 'https://execture.app.n8n.cloud/webhook/qbo-oauth-callback';
 
+// QuickBooks OAuth configuration
+const QBO_AUTH_URL = 'https://appcenter.intuit.com/connect/oauth2';
+const QBO_CLIENT_ID = ''; // Configure this in your QuickBooks Developer account
+const QBO_REDIRECT_URI = `${window.location.origin}/#/qbo-callback`;
+const QBO_SCOPE = 'com.intuit.quickbooks.accounting';
+
 export interface QBOConnection {
   id: string;
   realm_id: string;
@@ -14,13 +20,24 @@ export interface QBOConnection {
 }
 
 /**
- * Initiates QuickBooks OAuth flow for a client
+ * Initiates QuickBooks OAuth flow with direct redirect
  */
 export async function initiateQBOAuth(clientId: string, clientName: string, realmId: string) {
   try {
-    // Store state in localStorage to verify callback
+    // Validate configuration
+    if (!QBO_CLIENT_ID) {
+      console.error('QuickBooks Client ID not configured');
+      return {
+        success: false,
+        error: 'QuickBooks integration not configured. Please contact support.'
+      };
+    }
+
+    // Generate state for CSRF protection
     const state = crypto.randomUUID();
-    localStorage.setItem('qbo_oauth_state', JSON.stringify({
+    
+    // Store state in sessionStorage to verify callback
+    sessionStorage.setItem('qbo_oauth_state', JSON.stringify({
       clientId,
       clientName,
       realmId,
@@ -28,28 +45,25 @@ export async function initiateQBOAuth(clientId: string, clientName: string, real
       timestamp: Date.now()
     }));
 
-    // Build OAuth URL that redirects to n8n
-    const params = new URLSearchParams({
-      clientId,
-      clientName,
-      realmId,
-      state,
-      returnUrl: `${window.location.origin}/#/qbo-callback`
+    // Build QuickBooks OAuth URL
+    const authParams = new URLSearchParams({
+      client_id: QBO_CLIENT_ID,
+      scope: QBO_SCOPE,
+      redirect_uri: QBO_REDIRECT_URI,
+      response_type: 'code',
+      state: state
     });
 
-    // Open OAuth popup
-    const width = 600;
-    const height = 700;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
+    const authUrl = `${QBO_AUTH_URL}?${authParams.toString()}`;
     
-    const popup = window.open(
-      `${N8N_OAUTH_WEBHOOK}?${params.toString()}`,
-      'QuickBooks OAuth',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
+    // Log for debugging
+    console.log('QuickBooks OAuth URL:', authUrl);
+    console.log('Redirect URI:', QBO_REDIRECT_URI);
 
-    return { success: true, popup };
+    // Redirect to QuickBooks OAuth
+    window.location.href = authUrl;
+
+    return { success: true, popup: null };
   } catch (error) {
     console.error('Failed to initiate QBO OAuth:', error);
     return {
