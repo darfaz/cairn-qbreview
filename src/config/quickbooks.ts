@@ -8,7 +8,7 @@ export const getQuickBooksConfig = () => {
     redirectUri: `${window.location.origin}/qbo-callback`,
     environment: isDevelopment ? 'sandbox' : 'production',
     authorizationUrl: 'https://appcenter.intuit.com/connect/oauth2',
-    scope: 'com.intuit.quickbooks.accounting'
+    scope: 'com.intuit.quickbooks.accounting com.intuit.quickbooks.company.all'
   };
 };
 
