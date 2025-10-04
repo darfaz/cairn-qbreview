@@ -1,17 +1,15 @@
 import { getQuickBooksConfig } from '@/config/quickbooks';
 
-// Generate random state for CSRF protection
-function generateState() {
+function generateState(): string {
   return Math.random().toString(36).substring(2, 15) + 
          Math.random().toString(36).substring(2, 15);
 }
 
-// Build authorization URL
-export function getQuickBooksAuthUrl() {
+export function getQuickBooksAuthUrl(): string {
   const config = getQuickBooksConfig();
   const state = generateState();
   
-  // Store state in sessionStorage for validation later
+  // Store state in sessionStorage
   sessionStorage.setItem('qb_oauth_state', state);
   
   const params = new URLSearchParams({
@@ -22,23 +20,28 @@ export function getQuickBooksAuthUrl() {
     state: state
   });
   
-  return `${config.authorizationUrl}?${params.toString()}`;
+  const authUrl = `${config.authorizationUrl}?${params.toString()}`;
+  console.log('QuickBooks OAuth URL:', authUrl);
+  console.log('Redirect URI:', config.redirectUri);
+  
+  return authUrl;
 }
 
-// Redirect to QuickBooks OAuth
-export function connectToQuickBooks() {
+export function connectToQuickBooks(): void {
   const config = getQuickBooksConfig();
   
   // Validate configuration
-  if (!config.clientId || config.clientId === 'REPLACE_WITH_YOUR_CLIENT_ID') {
-    alert('QuickBooks integration not configured. Please contact support.');
+  if (!config.clientId || config.clientId.includes('REPLACE')) {
     console.error('QuickBooks Client ID not configured');
+    alert('QuickBooks integration not configured. Please contact support.');
     return;
   }
   
   try {
     const authUrl = getQuickBooksAuthUrl();
-    console.log('Redirecting to:', authUrl); // For debugging
+    console.log('Redirecting to QuickBooks OAuth...');
+    
+    // Use window.location.href for redirect (not window.open)
     window.location.href = authUrl;
   } catch (error) {
     console.error('Error initiating QuickBooks OAuth:', error);
