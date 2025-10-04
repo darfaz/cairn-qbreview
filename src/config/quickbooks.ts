@@ -5,7 +5,7 @@ export const getQuickBooksConfig = () => {
   
   return {
     clientId: 'ABC26AQKsKFuq5zbtbGukJeU3bGgwWiHodDbsJk5AeGnqRu7Tg',
-    redirectUri: `${window.location.origin}/#/qbo-callback`,
+    redirectUri: `${window.location.origin}/qbo-callback`,
     environment: isDevelopment ? 'sandbox' : 'production',
     authorizationUrl: 'https://appcenter.intuit.com/connect/oauth2',
     scope: 'com.intuit.quickbooks.accounting'
