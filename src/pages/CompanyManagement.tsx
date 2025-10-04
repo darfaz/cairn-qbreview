@@ -14,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import Footer from '@/components/Footer';
 
 interface ConnectedCompany {
   id: string;
@@ -249,7 +248,6 @@ const CompanyManagement = () => {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

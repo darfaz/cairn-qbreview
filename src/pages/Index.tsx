@@ -12,8 +12,6 @@ import { Building2, Search, Plus } from 'lucide-react';
 import { AddClientForm } from '@/components/AddClientForm';
 import { Client, DashboardSummary } from '@/types/dashboard';
 import { useToast } from '@/hooks/use-toast';
-import { QBOConnectionCard } from '@/components/qbo/QBOConnectionCard';
-import Footer from '@/components/Footer';
 
 interface ClientWithReview {
   id: string;
@@ -348,11 +346,6 @@ const Index = () => {
         {/* Summary Cards */}
         <SummaryCards summary={summary} />
         
-        {/* QuickBooks Connection */}
-        <div className="mb-8">
-          <QBOConnectionCard />
-        </div>
-        
         {/* Bulk Reconciliation Controls */}
         <div className="mb-8">
           <BulkReconciliationControls
@@ -399,7 +392,6 @@ const Index = () => {
           onSelectionChange={setSelectedClientIds}
         />
       </main>
-      <Footer />
     </div>
   );
 };

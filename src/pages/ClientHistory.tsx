@@ -15,7 +15,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import Footer from '@/components/Footer';
 
 interface Review {
   id: string;
@@ -225,7 +224,6 @@ const ClientHistory = () => {
           </CardContent>
         </Card>
       </div>
-      <Footer />
     </div>
   );
 };
