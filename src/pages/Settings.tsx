@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CSVUpload } from '@/components/clients/CSVUpload';
 import { Loader2, Save, Calendar, Settings as SettingsIcon, Key, Upload, Download, Trash2, FileText, Building2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Footer from '@/components/Footer';
 
 interface ScheduledRunSettings {
   id: string;
@@ -435,6 +436,7 @@ const Settings = () => {
           </Card>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
