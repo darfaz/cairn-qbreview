@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      const redirectTo = `${window.location.origin}/#/dashboard`;
+      const redirectTo = window.location.origin;
       console.log('[AUTH] signInWithGoogle called:', { redirectTo });
       
       const { error } = await supabase.auth.signInWithOAuth({
